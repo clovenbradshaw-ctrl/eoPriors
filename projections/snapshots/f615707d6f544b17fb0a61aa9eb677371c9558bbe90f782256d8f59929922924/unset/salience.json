@@ -1,0 +1,16 @@
+{
+  "lens_id": "unset",
+  "basis_id": null,
+  "observation_count": 0,
+  "holon_counts": {
+    "batches_folded": 0,
+    "events_resolved": 0,
+    "events_retracted": 0,
+    "observations_declined": 0,
+    "holons_ground": 0,
+    "holons_figure": 0,
+    "holons_pattern": 0
+  },
+  "identity_rebound_count": 0,
+  "generated_at": "2026-07-22T20:18:34.127Z"
+}

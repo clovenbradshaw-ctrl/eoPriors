@@ -1,0 +1,61 @@
+name: build-projection
+
+# SPEC.md §11. Triggers only on new batches; paths-ignore plus the
+# concurrency group below are the two independent guards against the
+# workflow's own commit (which touches projections/** and artifacts/**, never
+# batches/**) re-triggering itself.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'batches/**'
+    paths-ignore:
+      - 'projections/**'
+      - 'artifacts/**'
+  workflow_dispatch: {}
+
+concurrency:
+  group: build-projection-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      # §12: CI rejects any batch containing a §4.3 event type, a
+      # ledger_position field, a float in payload, or a mismatched event_id —
+      # checked before the projector ever reads these batches.
+      - name: Validate batches
+        run: npm run validate:batches
+
+      - name: Build projection
+        env:
+          GATEWAY_HEAD_PUBLISH_URL: ${{ secrets.GATEWAY_HEAD_PUBLISH_URL }}
+          GATEWAY_HEAD_PUBLISH_PASSWORD: ${{ secrets.GATEWAY_HEAD_PUBLISH_PASSWORD }}
+        run: npm run build:projection
+
+      - name: Commit projection if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add projections artifacts
+          if git diff --cached --quiet; then
+            echo "No projection changes to commit."
+          else
+            git commit -m "Rebuild projection from ledger head"
+            git push
+          fi

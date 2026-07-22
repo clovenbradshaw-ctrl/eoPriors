@@ -1,0 +1,13 @@
+{
+  "note": "A default view, not the library's one true state (SPEC.md invariant 11). Every lens listed below carries its own full manifest at manifest_path.",
+  "default_lens_id": "unset",
+  "lenses": [
+    {
+      "lens_id": "unset",
+      "basis_id": null,
+      "manifest_path": "current/unset/manifest.json"
+    }
+  ],
+  "ledger_head": [],
+  "generated_at": "2026-07-22T20:18:34.139Z"
+}

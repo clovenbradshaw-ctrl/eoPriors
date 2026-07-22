@@ -1,0 +1,6 @@
+{
+  "_comment": "Pointer to the live basis_id (SPEC.md §5.5, invariant 10). CODEOWNERS-gated: only a human-reviewed PR may change basis_id. null means no basis has been activated yet — routine ingestion may still proceed (source discovery, fetch, measurement against whatever basis a batch declares), but a projection with no active basis has no default lens to build (src/replay.js falls back to grouping by whatever basis_id each observation.measured event actually declares).",
+  "basis_id": null,
+  "activated_at": null,
+  "activated_via": null
+}

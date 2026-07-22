@@ -1,0 +1,27 @@
+name: verify-determinism
+
+# SPEC.md §11, invariant 1: replay from a clean checkout on a schedule and
+# diff against the published projection. Read-only — a failure here means
+# "current projected state can no longer be recreated from the ledger,"
+# never something this workflow tries to silently fix by committing over it.
+on:
+  schedule:
+    - cron: '17 4 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+      - run: npm run verify:determinism

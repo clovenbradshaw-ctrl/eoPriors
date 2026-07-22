@@ -1,0 +1,51 @@
+{
+  "_": "The 27-cell phasepost space, decomposed. Each key matches a vectors key in data/centroids-27.json and a phasepostCellKey enum entry in schemas/measurement.schema.json — those three must never drift apart. Source: eoreader4.2 docs/cube.md and docs/operators.md (the nine-operator Act face, the Site/Resolution faces' Object-diagonal coherence). Key format is OP_Stance_Site.",
+  "operators": {
+    "NUL": { "mode": "Differentiate", "domain": "Existence",      "label": "hold (non-transformation)" },
+    "SEG": { "mode": "Differentiate", "domain": "Structure",      "label": "resplit" },
+    "DEF": { "mode": "Differentiate", "domain": "Significance",   "label": "assert/define" },
+    "SIG": { "mode": "Relate",        "domain": "Existence",      "label": "attribute" },
+    "CON": { "mode": "Relate",        "domain": "Structure",      "label": "bond" },
+    "EVA": { "mode": "Relate",        "domain": "Significance",   "label": "evaluate frames" },
+    "INS": { "mode": "Generate",      "domain": "Existence",      "label": "instantiate" },
+    "SYN": { "mode": "Generate",      "domain": "Structure",      "label": "synthesize" },
+    "REC": { "mode": "Generate",      "domain": "Significance",   "label": "learn a rule" }
+  },
+  "cells": {
+    "NUL_Clearing_Void":            { "op": "NUL", "grain": "Ground", "site": "Void",       "stance": "Clearing" },
+    "NUL_Dissecting_Entity":        { "op": "NUL", "grain": "Figure", "site": "Entity",     "stance": "Dissecting" },
+    "NUL_Unraveling_Kind":          { "op": "NUL", "grain": "Pattern", "site": "Kind",       "stance": "Unraveling" },
+
+    "SEG_Clearing_Field":           { "op": "SEG", "grain": "Ground", "site": "Field",      "stance": "Clearing" },
+    "SEG_Dissecting_Link":          { "op": "SEG", "grain": "Figure", "site": "Link",       "stance": "Dissecting" },
+    "SEG_Unraveling_Network":       { "op": "SEG", "grain": "Pattern", "site": "Network",    "stance": "Unraveling" },
+
+    "DEF_Clearing_Atmosphere":      { "op": "DEF", "grain": "Ground", "site": "Atmosphere", "stance": "Clearing" },
+    "DEF_Dissecting_Lens":          { "op": "DEF", "grain": "Figure", "site": "Lens",       "stance": "Dissecting" },
+    "DEF_Unraveling_Paradigm":      { "op": "DEF", "grain": "Pattern", "site": "Paradigm",   "stance": "Unraveling" },
+
+    "SIG_Tending_Void":             { "op": "SIG", "grain": "Ground", "site": "Void",       "stance": "Tending" },
+    "SIG_Binding_Entity":           { "op": "SIG", "grain": "Figure", "site": "Entity",     "stance": "Binding" },
+    "SIG_Tracing_Kind":             { "op": "SIG", "grain": "Pattern", "site": "Kind",       "stance": "Tracing" },
+
+    "CON_Tending_Field":            { "op": "CON", "grain": "Ground", "site": "Field",      "stance": "Tending" },
+    "CON_Binding_Link":             { "op": "CON", "grain": "Figure", "site": "Link",       "stance": "Binding" },
+    "CON_Tracing_Network":          { "op": "CON", "grain": "Pattern", "site": "Network",    "stance": "Tracing" },
+
+    "EVA_Tending_Atmosphere":       { "op": "EVA", "grain": "Ground", "site": "Atmosphere", "stance": "Tending" },
+    "EVA_Binding_Lens":             { "op": "EVA", "grain": "Figure", "site": "Lens",       "stance": "Binding" },
+    "EVA_Tracing_Paradigm":         { "op": "EVA", "grain": "Pattern", "site": "Paradigm",   "stance": "Tracing" },
+
+    "INS_Cultivating_Void":         { "op": "INS", "grain": "Ground", "site": "Void",       "stance": "Cultivating" },
+    "INS_Making_Entity":            { "op": "INS", "grain": "Figure", "site": "Entity",     "stance": "Making" },
+    "INS_Composing_Kind":           { "op": "INS", "grain": "Pattern", "site": "Kind",       "stance": "Composing" },
+
+    "SYN_Cultivating_Field":        { "op": "SYN", "grain": "Ground", "site": "Field",      "stance": "Cultivating" },
+    "SYN_Making_Link":              { "op": "SYN", "grain": "Figure", "site": "Link",       "stance": "Making" },
+    "SYN_Composing_Network":        { "op": "SYN", "grain": "Pattern", "site": "Network",    "stance": "Composing" },
+
+    "REC_Cultivating_Atmosphere":   { "op": "REC", "grain": "Ground", "site": "Atmosphere", "stance": "Cultivating" },
+    "REC_Making_Lens":              { "op": "REC", "grain": "Figure", "site": "Lens",       "stance": "Making" },
+    "REC_Composing_Paradigm":       { "op": "REC", "grain": "Pattern", "site": "Paradigm",   "stance": "Composing" }
+  }
+}

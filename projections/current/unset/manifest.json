@@ -1,0 +1,23 @@
+{
+  "projection_id": "projection:sha256:f615707d6f544b17fb0a61aa9eb677371c9558bbe90f782256d8f59929922924",
+  "lens_id": "unset",
+  "basis_ids_in_scope": [],
+  "ledger_head": [],
+  "projector_version": "eopriors-replay@1.0.0",
+  "policy_hashes": {
+    "library": "sha256:9c2e054a8088af8d0ecdb9e92b9c6ea9f08a0091a47885ea95800cdc8cfccd70",
+    "rights-policy": "sha256:f3019492b343d0d1a625d3ed3773993c5d5ac992f248b96d9355f0ebd26ba3cd",
+    "emergence-policy": "sha256:0b5a0ad13f4380c96f904659eadc025805511963766792a35ff359cd0e6bf858"
+  },
+  "determinism": "attested",
+  "built_at": "2026-07-22T20:18:34.127Z",
+  "counts": {
+    "batches_folded": 0,
+    "events_resolved": 0,
+    "events_retracted": 0,
+    "observations_declined": 0,
+    "holons_ground": 0,
+    "holons_figure": 0,
+    "holons_pattern": 0
+  }
+}

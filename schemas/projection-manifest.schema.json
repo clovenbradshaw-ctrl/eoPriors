@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "projection-manifest.schema.json",
+  "title": "Projection manifest",
+  "description": "Written only by the build workflow (src/replay.js), never by a batch. Pins everything a reproduction attempt needs (SPEC.md §7, acceptance criteria #8): ledger head, projector version, policy hashes, and every basis_id in scope. projections/current/manifest.json is a default-view pointer, not a truth claim (invariant 11) — every artifact it points to still carries this same shape and its own basis/lens identity.",
+  "$defs": {
+    "sha256Ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  },
+  "type": "object",
+  "required": [
+    "projection_id", "lens_id", "basis_ids_in_scope", "ledger_head",
+    "projector_version", "policy_hashes", "determinism", "built_at", "counts"
+  ],
+  "properties": {
+    "projection_id": {
+      "type": "string",
+      "pattern": "^projection:sha256:[0-9a-f]{64}$",
+      "description": "Hash of ledger_head + projector_version + policy_hashes + basis_ids_in_scope + configuration (§7) — content-addressed, not a counter."
+    },
+    "lens_id": {
+      "type": "string",
+      "description": "Which basis/lens standpoint this projection was built from. 'default' for projections/current/ itself; a basis_id-derived slug for projections/current/<lens-id>/."
+    },
+    "basis_ids_in_scope": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "pattern": "^exemplar-basis:sha256:[0-9a-f]{64}$" },
+      "description": "Every basis_id any measurement in this projection depends on. A projection mixing measurements from an undeclared basis_id fails its own consistency check (invariant 18)."
+    },
+    "ledger_head": {
+      "type": "array",
+      "description": "The event DAG's current frontier: event_ids with no other retained event listing them as an input. NOT a sequencer position (invariant 2) — a set, not a number.",
+      "items": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+    },
+    "projector_version": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+@\\d+\\.\\d+\\.\\d+$",
+      "description": "e.g. eopriors-replay@1.0.0 (src/replay.js)."
+    },
+    "policy_hashes": {
+      "type": "object",
+      "description": "Every config/*.yaml this build read, by filename, hashed — so a policy change is visible in the manifest even if the ledger didn't change.",
+      "required": ["library", "rights-policy", "emergence-policy"],
+      "properties": {
+        "library": { "$ref": "#/$defs/sha256Ref" },
+        "rights-policy": { "$ref": "#/$defs/sha256Ref" },
+        "emergence-policy": { "$ref": "#/$defs/sha256Ref" }
+      },
+      "additionalProperties": { "$ref": "#/$defs/sha256Ref" }
+    },
+    "determinism": {
+      "type": "string",
+      "enum": ["reproduced", "attested"],
+      "description": "reproduced: identical ledger + policy + classifier + embedding model/version + algorithm version yields byte-identical output. attested: verifiable against recorded inputs, not rebuildable from scratch (invariant 4). Never 'reproduced' while depending on an unpinned or nondeterministic call."
+    },
+    "attested_inputs": {
+      "type": "array",
+      "description": "Present and non-empty only when determinism is 'attested' — names which specific inputs are not independently regenerable.",
+      "items": { "type": "string" }
+    },
+    "built_at": { "type": "string", "format": "date-time" },
+    "counts": {
+      "type": "object",
+      "description": "Coarse stats a human skims before opening holons/ — batches folded, events resolved (post retraction/supersession), holons at each grain.",
+      "properties": {
+        "batches_folded": { "type": "integer", "minimum": 0 },
+        "events_resolved": { "type": "integer", "minimum": 0 },
+        "events_retracted": { "type": "integer", "minimum": 0 },
+        "observations_declined": { "type": "integer", "minimum": 0 },
+        "holons_ground": { "type": "integer", "minimum": 0 },
+        "holons_figure": { "type": "integer", "minimum": 0 },
+        "holons_pattern": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "diff_of": {
+      "type": ["string", "null"],
+      "pattern": "^projection:sha256:[0-9a-f]{64}$",
+      "description": "The previous projection_id this one's projections/current/<lens-id>/diff.json explains the change from, or null for a first build (invariant 9)."
+    }
+  }
+}

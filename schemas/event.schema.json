@@ -1,0 +1,212 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "event.schema.json",
+  "title": "Event",
+  "description": "The common envelope every ledger event shares (SPEC.md §4.1). event_id = sha256(canonical_json(envelope minus event_id)) — see src/event.js, the same hashing both the browser surface and an agent must use before submitting. This schema validates envelope shape and the well-specified payloads; it does not by itself enforce which event_types a batch may carry — that allowlist (SPEC.md §4.2 vs §4.3) lives in src/event.js's GATEWAY_WRITABLE_EVENT_TYPES and is checked separately (a §4.3 event is a syntactically valid Event that is nonetheless never legal in batches/).",
+  "$defs": {
+    "sha256Ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "uuidRef": { "type": "string", "pattern": "^uuid:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+
+    "gatewayWritableEventType": {
+      "enum": [
+        "source.discovered", "source.identity.resolved", "source.rights.assessed",
+        "source.fetch.observed", "source.archive.requested", "source.archive.confirmed",
+        "observation.created", "observation.representation.computed",
+        "observation.measured", "observation.stability.measured",
+        "observation.invalidated", "observation.declined", "observation.flagged",
+        "evidence.support.observed", "evidence.challenge.observed",
+        "evidence.equivalence.proposed", "evidence.distinction.proposed",
+        "evidence.relation.observed",
+        "event.retracted", "event.superseded", "selector.corrected",
+        "exemplar.candidate.scored", "exemplar.basis.selected"
+      ]
+    },
+    "projectorOnlyEventType": {
+      "enum": [
+        "holon.emerged", "holon.split.projected", "holon.merge.projected", "holon.dissolved",
+        "projection.completed", "projection.published",
+        "policy.activated", "projector.activated",
+        "exemplar.basis.activated",
+        "compressor_pack.activated"
+      ]
+    },
+
+    "actor": {
+      "type": "object",
+      "required": ["type", "id", "version"],
+      "properties": {
+        "type": { "type": "string", "enum": ["human", "agent", "projector"] },
+        "id": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "model": {
+          "type": "string",
+          "description": "Model identifier, when type is agent (SPEC.md §10: 'your name, version, model identifier')."
+        }
+      }
+    },
+    "run": {
+      "type": "object",
+      "required": ["run_id", "batch_id", "configuration_hash"],
+      "properties": {
+        "run_id": { "$ref": "#/$defs/uuidRef" },
+        "batch_id": { "$ref": "#/$defs/uuidRef" },
+        "configuration_hash": { "$ref": "#/$defs/sha256Ref" }
+      }
+    },
+
+    "observationMeasuredPayload": {
+      "type": "object",
+      "required": ["observation_id", "measurement_id", "basis_id", "measurement_protocol", "phasepost_measurements", "diagnostics"],
+      "properties": {
+        "observation_id": { "type": "string", "pattern": "^observation:sha256:[0-9a-f]{64}$" },
+        "measurement_id": { "$ref": "measurement.schema.json#/properties/measurement_id" },
+        "basis_id": { "$ref": "measurement.schema.json#/properties/basis_id" },
+        "measurement_protocol": { "$ref": "measurement.schema.json#/properties/measurement_protocol" },
+        "phasepost_measurements": { "$ref": "measurement.schema.json#/$defs/phasepostMeasurements" },
+        "diagnostics": { "$ref": "measurement.schema.json#/$defs/diagnostics" }
+      }
+    },
+    "exemplarCandidateScoredPayload": {
+      "type": "object",
+      "description": "Structurally an observation.measured where the candidate is its own source (SPEC.md §5.2).",
+      "required": ["candidate_id", "measurement_id", "basis_id", "measurement_protocol", "phasepost_measurements", "diagnostics"],
+      "properties": {
+        "candidate_id": { "type": "string", "minLength": 1 },
+        "measurement_id": { "$ref": "measurement.schema.json#/properties/measurement_id" },
+        "basis_id": { "$ref": "measurement.schema.json#/properties/basis_id" },
+        "measurement_protocol": { "$ref": "measurement.schema.json#/properties/measurement_protocol" },
+        "phasepost_measurements": { "$ref": "measurement.schema.json#/$defs/phasepostMeasurements" },
+        "diagnostics": { "$ref": "measurement.schema.json#/$defs/diagnostics" }
+      }
+    },
+    "observationDeclinedPayload": {
+      "type": "object",
+      "required": ["candidate_span_selector", "source_id", "decline_reason", "competence_gain_ppm", "refold_material", "gate_version"],
+      "properties": {
+        "candidate_span_selector": { "$ref": "selector.schema.json" },
+        "source_id": { "type": "string", "pattern": "^source:sha256:[0-9a-f]{64}$" },
+        "decline_reason": { "type": "string", "minLength": 1 },
+        "competence_gain_ppm": { "type": "integer", "minimum": -1000000, "maximum": 1000000 },
+        "refold_material": {
+          "type": "object",
+          "required": ["representation_ids", "artifact_uri"],
+          "properties": {
+            "representation_ids": { "type": "array", "items": { "type": "string", "pattern": "^representation:sha256:[0-9a-f]{64}$" } },
+            "artifact_uri": { "type": ["string", "null"], "format": "uri" }
+          }
+        },
+        "gate_version": { "type": "string", "pattern": "^[a-z0-9-]+@\\d+\\.\\d+\\.\\d+$" }
+      }
+    },
+    "observationFlaggedPayload": {
+      "type": "object",
+      "description": "The SIG operator, not CON — a flag, not a fold (SPEC.md §4.6). Carried as evidence that does not decay when the salience gate would have declined it.",
+      "required": ["observation_id", "flagged_by", "reason", "weight_ppm"],
+      "properties": {
+        "observation_id": { "type": "string", "pattern": "^observation:sha256:[0-9a-f]{64}$" },
+        "flagged_by": { "type": "string", "enum": ["human", "agent"] },
+        "reason": { "type": "string", "minLength": 1 },
+        "weight_ppm": { "type": "integer", "minimum": 0, "maximum": 1000000 }
+      }
+    },
+    "exemplarBasisSelectedPayload": {
+      "type": "object",
+      "required": ["basis_id", "candidate_pool_hash", "classifier", "embedding_model", "selection_algorithm", "selected", "coverage", "determinism"],
+      "properties": {
+        "basis_id": { "$ref": "exemplar-basis.schema.json#/properties/basis_id" },
+        "candidate_pool_hash": { "$ref": "#/$defs/sha256Ref" },
+        "classifier": { "$ref": "exemplar-basis.schema.json#/properties/classifier" },
+        "embedding_model": { "$ref": "exemplar-basis.schema.json#/properties/embedding_model" },
+        "selection_algorithm": { "$ref": "exemplar-basis.schema.json#/properties/selection_algorithm" },
+        "selected": { "$ref": "exemplar-basis.schema.json#/properties/selected" },
+        "coverage": { "$ref": "exemplar-basis.schema.json#/properties/coverage" },
+        "determinism": { "$ref": "exemplar-basis.schema.json#/properties/determinism" }
+      }
+    },
+    "exemplarBasisActivatedPayload": {
+      "type": "object",
+      "description": "§4.3 only — never legal in a batch. Written by the build workflow after a human-reviewed PR against config/exemplar-basis/active.json (§5.5).",
+      "required": ["basis_id", "selected_from_event_id", "activated_at", "activated_via", "previous_basis_id"],
+      "properties": {
+        "basis_id": { "$ref": "exemplar-basis.schema.json#/properties/basis_id" },
+        "selected_from_event_id": { "$ref": "#/$defs/sha256Ref" },
+        "activated_at": { "type": "string", "format": "date-time" },
+        "activated_via": { "type": "string", "minLength": 1 },
+        "previous_basis_id": { "type": ["string", "null"], "pattern": "^exemplar-basis:sha256:[0-9a-f]{64}$" }
+      }
+    },
+    "sourceDiscoveredPayload": {
+      "type": "object",
+      "required": ["source_id", "uri"],
+      "properties": {
+        "source_id": { "$ref": "source.schema.json#/properties/source_id" },
+        "uri": { "$ref": "source.schema.json#/properties/uri" },
+        "discovered_via": { "$ref": "source.schema.json#/properties/discovered_via" }
+      }
+    },
+    "eventRetractedPayload": {
+      "type": "object",
+      "required": ["retracted_event_id", "reason"],
+      "properties": {
+        "retracted_event_id": { "$ref": "#/$defs/sha256Ref" },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    },
+    "eventSupersededPayload": {
+      "type": "object",
+      "required": ["superseded_event_id", "superseding_event_id", "reason"],
+      "properties": {
+        "superseded_event_id": { "$ref": "#/$defs/sha256Ref" },
+        "superseding_event_id": { "$ref": "#/$defs/sha256Ref" },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    },
+    "selectorCorrectedPayload": {
+      "type": "object",
+      "description": "Named in invariant 7 as one of the four append-only correction event types; a corrected selector is a new event, never an edit to the original.",
+      "required": ["original_selector_id", "corrected_selector", "reason"],
+      "properties": {
+        "original_selector_id": { "type": "string", "pattern": "^selector:sha256:[0-9a-f]{64}$" },
+        "corrected_selector": { "$ref": "selector.schema.json" },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    }
+  },
+
+  "type": "object",
+  "required": ["spec_version", "event_type", "event_id", "occurred_at", "actor", "run", "inputs", "payload"],
+  "properties": {
+    "spec_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "event_type": {
+      "anyOf": [
+        { "$ref": "#/$defs/gatewayWritableEventType" },
+        { "$ref": "#/$defs/projectorOnlyEventType" }
+      ]
+    },
+    "event_id": { "$ref": "#/$defs/sha256Ref" },
+    "occurred_at": { "type": "string", "format": "date-time" },
+    "actor": { "$ref": "#/$defs/actor" },
+    "run": { "$ref": "#/$defs/run" },
+    "inputs": {
+      "type": "array",
+      "description": "Causal DAG edges: event_ids this event depends on. Canonical order is a topological sort over this graph, tie-broken by event_id (invariant 2) — never a ledger_position field, which must never appear anywhere in an event.",
+      "items": { "$ref": "#/$defs/sha256Ref" }
+    },
+    "payload": { "type": "object" }
+  },
+  "not": {
+    "required": ["ledger_position"]
+  },
+  "allOf": [
+    { "if": { "properties": { "event_type": { "const": "observation.measured" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/observationMeasuredPayload" } } } },
+    { "if": { "properties": { "event_type": { "const": "exemplar.candidate.scored" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/exemplarCandidateScoredPayload" } } } },
+    { "if": { "properties": { "event_type": { "const": "observation.declined" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/observationDeclinedPayload" } } } },
+    { "if": { "properties": { "event_type": { "const": "observation.flagged" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/observationFlaggedPayload" } } } },
+    { "if": { "properties": { "event_type": { "const": "exemplar.basis.selected" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/exemplarBasisSelectedPayload" } } } },
+    { "if": { "properties": { "event_type": { "const": "exemplar.basis.activated" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/exemplarBasisActivatedPayload" } } } },
+    { "if": { "properties": { "event_type": { "const": "source.discovered" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/sourceDiscoveredPayload" } } } },
+    { "if": { "properties": { "event_type": { "const": "event.retracted" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/eventRetractedPayload" } } } },
+    { "if": { "properties": { "event_type": { "const": "event.superseded" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/eventSupersededPayload" } } } },
+    { "if": { "properties": { "event_type": { "const": "selector.corrected" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/selectorCorrectedPayload" } } } }
+  ]
+}
