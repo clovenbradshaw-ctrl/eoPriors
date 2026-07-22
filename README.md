@@ -23,7 +23,9 @@ authoritative; this file is only a map and a quick start.
 
 The `eoPriors — batch ingestion gateway` n8n workflow is already built and
 deployed independently of this repo (§8) — nothing here starts or configures
-it. Point `index.html`'s "gateway base URL" field at your deployment.
+it. `index.html`'s "gateway base URL" field defaults to the live deployment
+(`https://n8n.intelechia.com/webhook-test`); override it there for a local or
+alternate gateway.
 
 ## Running locally
 
