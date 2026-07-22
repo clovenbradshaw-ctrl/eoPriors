@@ -1,0 +1,38 @@
+# eoPriors — library-level configuration (SPEC.md §3, §11).
+# Read by scripts/build-projection.mjs at the start of every build. Changing
+# this file requires a human-reviewed PR (.github/CODEOWNERS) and its hash is
+# pinned into every projection manifest's policy_hashes.library field.
+
+spec_version: "1.0.0"
+
+library:
+  name: "eoPriors"
+  description: >
+    An append-only ledger of observations about source material, compressed
+    against a constructed exemplar basis. See SPEC.md.
+
+# The one legitimate source of any phasepost claim in the system
+# (invariant 5). Never anything else, never a literal.
+classifier: "eo-lexical-analysis-2.0"
+
+# Pinned so a cosine measured today means the same thing as one measured a
+# year from now. Changing this is a basis-construction-grade decision, not a
+# routine config edit — see SPEC.md §5.2, §10.
+embedding_model: "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2.17"
+
+# "reproduced" requires verifying the embedding step is bit-stable across the
+# environments that will ever rebuild this projection (invariant 4). Until an
+# operator has done that verification for their own CI + local dev setup,
+# this stays "attested" — a projection is never allowed to claim more
+# determinism than has actually been checked.
+default_determinism_grade: "attested"
+
+gateway:
+  # The n8n gateway is already built and deployed independently of this repo
+  # (SPEC.md §8) — these are documented endpoint shapes, not secrets, and not
+  # read by any script here. Actual URLs/passwords are supplied to
+  # scripts/build-projection.mjs via environment variables
+  # (GATEWAY_HEAD_PUBLISH_URL, GATEWAY_HEAD_PUBLISH_PASSWORD), never committed.
+  batches_endpoint: "/webhook/eo/v1/batches"
+  head_publish_endpoint: "/webhook/eo/v1/head/publish"
+  head_endpoint: "/webhook/eo/v1/head"

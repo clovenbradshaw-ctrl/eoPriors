@@ -1,1 +1,477 @@
+<title>eoPriors</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="description" content="An append-only ledger of observations about source material, compressed against a constructed exemplar basis." />
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff; --fg: #111111; --muted: #666666; --border: #d8d8d8;
+    --accent: #1a5fb4; --warn: #a8390a; --ok: #1a6b3f; --code-bg: #f4f4f4;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #111111; --fg: #eeeeee; --muted: #999999; --border: #3a3a3a; --code-bg: #1c1c1c; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0 1rem 3rem; background: var(--bg); color: var(--fg);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  code, .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 0.9em; }
+  header { display: flex; align-items: baseline; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  header h1 { font-size: 1.1rem; margin: 0; }
+  header .spec-version { color: var(--muted); font-size: 0.85rem; }
+  nav { display: flex; gap: 0.25rem; margin-left: auto; }
+  nav button { background: none; border: 1px solid var(--border); color: var(--fg); padding: 0.4rem 0.8rem; cursor: pointer; }
+  nav button[aria-current="true"] { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  main { max-width: 960px; margin: 0 auto; padding-top: 1.5rem; }
+  section[hidden] { display: none; }
+  fieldset { border: 1px solid var(--border); margin: 0 0 1.5rem; padding: 1rem; }
+  legend { padding: 0 0.4rem; color: var(--muted); }
+  label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 0.25rem; }
+  input[type="text"], input[type="password"], input[type="url"], textarea {
+    width: 100%; padding: 0.5rem; border: 1px solid var(--border); background: var(--bg); color: var(--fg); font: inherit;
+  }
+  textarea { font-family: ui-monospace, monospace; min-height: 8rem; }
+  button.action {
+    background: var(--fg); color: var(--bg); border: none; padding: 0.5rem 1rem; cursor: pointer; font: inherit;
+  }
+  button.action:disabled { opacity: 0.4; cursor: default; }
+  button.subtle { background: none; border: 1px solid var(--border); color: var(--fg); padding: 0.3rem 0.6rem; cursor: pointer; font: inherit; font-size: 0.85rem; }
+  .row { display: flex; gap: 0.75rem; align-items: end; flex-wrap: wrap; }
+  .row > * { flex: 1; min-width: 12rem; }
+  .dropzone { border: 1px dashed var(--border); padding: 1.5rem; text-align: center; color: var(--muted); margin: 0.75rem 0; }
+  .dropzone.dragover { border-color: var(--accent); color: var(--accent); }
+  .span-card { border: 1px solid var(--border); padding: 0.6rem 0.75rem; margin-bottom: 0.5rem; }
+  .span-card.declined { opacity: 0.55; }
+  .span-card .meta { display: flex; gap: 0.75rem; font-size: 0.8rem; color: var(--muted); margin-top: 0.4rem; flex-wrap: wrap; }
+  .span-card .text { white-space: pre-wrap; }
+  .badge { border: 1px solid var(--border); padding: 0.05rem 0.4rem; font-size: 0.75rem; }
+  .badge.flagged { border-color: var(--warn); color: var(--warn); }
+  .badge.measured { border-color: var(--ok); color: var(--ok); }
+  .badge.declined { border-color: var(--muted); }
+  table.grid { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
+  table.grid th, table.grid td { border: 1px solid var(--border); padding: 0.4rem; text-align: left; }
+  table.grid td.cell-count { text-align: right; color: var(--muted); }
+  .status { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; }
+  .status.error { color: var(--warn); }
+  .status.ok { color: var(--ok); }
+  pre.log { background: var(--code-bg); padding: 0.75rem; overflow-x: auto; font-size: 0.8rem; max-height: 12rem; }
+</style>
 
+<header>
+  <h1>eoPriors</h1>
+  <span class="spec-version mono">SPEC.md §9</span>
+  <nav>
+    <button data-view="ingest" aria-current="true">Reader / Ingest</button>
+    <button data-view="basis">Basis Inspector</button>
+  </nav>
+</header>
+
+<main>
+  <fieldset>
+    <legend>Session</legend>
+    <div class="row">
+      <div>
+        <label for="gateway-url">Gateway base URL</label>
+        <input id="gateway-url" type="url" placeholder="https://your-n8n-host" />
+      </div>
+      <div>
+        <label for="gateway-password">Gateway password</label>
+        <input id="gateway-password" type="password" autocomplete="off" placeholder="held in memory only, never localStorage" />
+      </div>
+      <div>
+        <label for="actor-name">Your name (optional)</label>
+        <input id="actor-name" type="text" placeholder="anonymous" />
+      </div>
+    </div>
+    <p class="status">Password is kept in a page-local JS variable only — never written to localStorage or sent anywhere but the gateway (SPEC.md §9).</p>
+  </fieldset>
+
+  <section id="view-ingest">
+    <fieldset>
+      <legend>1. Bring in a source</legend>
+      <div class="row">
+        <div style="flex:2">
+          <label for="source-url">Paste a URL (best-effort — subject to the browser's own CORS policy; this surface runs no fetch proxy)</label>
+          <input id="source-url" type="url" placeholder="https://example.com/article" />
+        </div>
+        <div><button class="action" id="fetch-url">Fetch</button></div>
+      </div>
+      <div id="dropzone" class="dropzone">drop a text file here, or paste raw text below</div>
+      <label for="source-paste">…or paste text directly</label>
+      <textarea id="source-paste" placeholder="paste source text here"></textarea>
+      <div class="row" style="margin-top:0.75rem">
+        <div><button class="action" id="ingest-text">Segment &amp; measure</button></div>
+      </div>
+      <p id="source-status" class="status"></p>
+    </fieldset>
+
+    <fieldset id="spans-fieldset" hidden>
+      <legend>2. Salience — which spans are surprising relative to the basis</legend>
+      <p class="status">Each span below was embedded and scored against all 27 phasepost cells of the active basis (src/compress.js, measurement_protocol eo-compression@1.0.0). A span whose total_supported_amplitude falls under the salience floor is declined by default — flag it if it matters anyway (SPEC.md §4.6, the SIG operator: a flag, not a fold).</p>
+      <div id="spans-list"></div>
+    </fieldset>
+
+    <fieldset id="submit-fieldset" hidden>
+      <legend>3. Submit</legend>
+      <p>This batch will carry <span id="event-count">0</span> event(s) under one new <code>batch_id</code>.</p>
+      <button class="action" id="submit-batch">Submit batch to gateway</button>
+      <p id="submit-status" class="status"></p>
+      <pre id="submit-log" class="log" hidden></pre>
+    </fieldset>
+  </section>
+
+  <section id="view-basis" hidden>
+    <fieldset>
+      <legend>Active basis</legend>
+      <p id="basis-summary" class="status">Loading…</p>
+    </fieldset>
+    <fieldset>
+      <legend>27-cell coverage</legend>
+      <p class="status">Read-only, by design (SPEC.md invariant 10) — there is no edit affordance on this page for the exemplar basis. Activating or replacing a basis happens only through a human-reviewed PR against config/exemplar-basis/active.json.</p>
+      <div id="basis-grid"></div>
+    </fieldset>
+  </section>
+</main>
+
+<script type="module">
+  import { makeEvent, makeUuidRef, contentRef, canonicalize, sha256Ref, sha256Hex } from './src/event.js';
+  import { segmentObservations } from './src/segment.js';
+  import { createEmbedder, EMBEDDING_MODEL_REF } from './src/embed.js';
+  import { measurePhasepost, MEASUREMENT_PROTOCOL } from './src/compress.js';
+
+  const DECLINE_THRESHOLD_PPM = 300_000; // salience-gate@1.0.0 v1: below 30% supported amplitude, decline by default
+  const GATE_VERSION = 'salience-gate@1.0.0';
+  const SPEC_VERSION = '1.0.0';
+  const ACTOR_VERSION = '1.0.0';
+
+  // ── in-memory session state — the password never leaves this closure ──
+  let password = '';
+  const runId = makeUuidRef();
+  // batch_id is part of every event's hashed envelope (§4.1), so it must be
+  // fixed BEFORE any event in the batch is hashed via makeEvent — never
+  // patched onto an already-hashed event afterward, which would silently
+  // invalidate its event_id. A fresh one is minted after each successful
+  // submit (a batch_id is one-shot; resubmitting under an old one reads as
+  // a duplicate, §10 step 5).
+  let currentBatchId = makeUuidRef();
+  // Pins which measurement protocol + embedding model this run used — its
+  // own small, static configuration, distinct from the ledger-wide
+  // policy_hashes a projection manifest carries.
+  const configurationHash = await sha256Ref(canonicalJsonSeed());
+  function canonicalJsonSeed() {
+    return JSON.stringify(canonicalize({ measurement_protocol: MEASUREMENT_PROTOCOL, embedding_model: EMBEDDING_MODEL_REF, spec_version: SPEC_VERSION }));
+  }
+  const embedder = createEmbedder();
+  let centroidsPromise = null;
+  let currentSource = null; // { source_id, uri, text, content_sha256, representation_id }
+  const pendingEvents = []; // events assembled so far, not yet submitted
+  const spanRecords = []; // { span, observation_id, measurement, declined, flagged }
+
+  const $ = (sel) => document.querySelector(sel);
+  const gatewayUrlInput = $('#gateway-url');
+  const passwordInput = $('#gateway-password');
+  const actorNameInput = $('#actor-name');
+
+  gatewayUrlInput.value = localStorage.getItem('eopriors.gatewayUrl') || '';
+  gatewayUrlInput.addEventListener('change', () => localStorage.setItem('eopriors.gatewayUrl', gatewayUrlInput.value));
+  passwordInput.addEventListener('input', () => { password = passwordInput.value; });
+
+  const actorId = () => `human:${(actorNameInput.value || 'anonymous').trim().toLowerCase().replace(/\s+/g, '-') || 'anonymous'}`;
+  const actor = () => ({ type: 'human', id: actorId(), version: ACTOR_VERSION });
+  const run = () => ({ run_id: runId, batch_id: currentBatchId, configuration_hash: configurationHash });
+
+  // ── OPFS basis cache — the basis's embeddings/fold-signatures, not the
+  // 100 source texts, fetched once per basis_id and reused across sessions
+  // until the manifest reports a new one (SPEC.md §9). Falls back to an
+  // in-memory-only cache when OPFS isn't available.
+  async function opfsGet(key) {
+    try {
+      const root = await navigator.storage.getDirectory();
+      const handle = await root.getFileHandle(key);
+      const file = await handle.getFile();
+      return JSON.parse(await file.text());
+    } catch { return null; }
+  }
+  async function opfsPut(key, value) {
+    try {
+      const root = await navigator.storage.getDirectory();
+      const handle = await root.getFileHandle(key, { create: true });
+      const writable = await handle.createWritable();
+      await writable.write(JSON.stringify(value));
+      await writable.close();
+    } catch { /* no OPFS in this context — silently in-memory only */ }
+  }
+
+  let memoryCentroids = null;
+  async function loadCachedCentroids() {
+    if (centroidsPromise) return centroidsPromise;
+    centroidsPromise = (async () => {
+      const cacheKey = 'centroids-27.json';
+      const cached = memoryCentroids || (await opfsGet(cacheKey));
+      if (cached) { memoryCentroids = cached; return cached; }
+      const res = await fetch(new URL('./data/centroids-27.json', import.meta.url));
+      const bundle = await res.json();
+      memoryCentroids = bundle;
+      await opfsPut(cacheKey, bundle);
+      return bundle;
+    })();
+    return centroidsPromise;
+  }
+
+  async function loadActiveBasisId() {
+    try {
+      const res = await fetch(new URL('./config/exemplar-basis/active.json', import.meta.url));
+      const doc = await res.json();
+      return doc.basis_id;
+    } catch { return null; }
+  }
+
+  // ── view switching ──────────────────────────────────────────────────
+  document.querySelectorAll('nav button').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('nav button').forEach((b) => b.setAttribute('aria-current', String(b === btn)));
+      document.querySelectorAll('main > section').forEach((s) => { s.hidden = s.id !== `view-${btn.dataset.view}`; });
+      if (btn.dataset.view === 'basis') renderBasisView();
+    });
+  });
+
+  // ── ingest: URL / paste / drop → source.fetch.observed ──────────────
+  const dropzone = $('#dropzone');
+  ['dragenter', 'dragover'].forEach((evt) => dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.add('dragover'); }));
+  ['dragleave', 'drop'].forEach((evt) => dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.remove('dragover'); }));
+  dropzone.addEventListener('drop', async (e) => {
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+    $('#source-paste').value = await file.text();
+    setSourceStatus(`Loaded ${file.name} (${file.size} bytes) into the paste box — click "Segment & measure" to continue.`);
+  });
+
+  $('#fetch-url').addEventListener('click', async () => {
+    const url = $('#source-url').value.trim();
+    if (!url) return;
+    setSourceStatus('Fetching…');
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const text = await res.text();
+      $('#source-paste').value = text;
+      setSourceStatus(`Fetched ${url} (${text.length} chars). Click "Segment & measure" to continue.`, 'ok');
+    } catch (err) {
+      setSourceStatus(`Could not fetch that URL directly from the browser (${err.message}). This is very often the site's CORS policy, not a bug here — paste the text instead.`, 'error');
+    }
+  });
+
+  function setSourceStatus(msg, kind) {
+    const el = $('#source-status');
+    el.textContent = msg;
+    el.className = `status${kind ? ` ${kind}` : ''}`;
+  }
+
+  $('#ingest-text').addEventListener('click', async () => {
+    const text = $('#source-paste').value;
+    if (!text.trim()) { setSourceStatus('Nothing to segment yet.', 'error'); return; }
+    const uriOrPasteRef = $('#source-url').value.trim() || `paste:${runId}`;
+    await ingestText(text, uriOrPasteRef);
+  });
+
+  async function ingestText(text, uri) {
+    setSourceStatus('Hashing and segmenting…');
+    const content_sha256 = await sha256Hex(text);
+    const source_id = await contentRef('source', canonicalize({ uri, content_sha256 }));
+    const representation_id = await contentRef('representation', canonicalize({ source_id, content_sha256 }));
+    currentSource = { source_id, uri, text, content_sha256, representation_id };
+
+    pendingEvents.length = 0;
+    spanRecords.length = 0;
+
+    pendingEvents.push(await makeEvent({
+      spec_version: SPEC_VERSION, event_type: 'source.discovered', actor: actor(), run: run(),
+      payload: { source_id, uri },
+    }));
+    pendingEvents.push(await makeEvent({
+      spec_version: SPEC_VERSION, event_type: 'source.fetch.observed', actor: actor(), run: run(),
+      payload: { source_id, content_sha256, byte_length: new TextEncoder().encode(text).length, content_type: 'text/plain' },
+    }));
+
+    const { paragraphs } = segmentObservations(text);
+    setSourceStatus(`Segmented into ${paragraphs.length} paragraph-level span(s). Embedding + measuring against the active basis (first run downloads the MiniLM model — this can take a moment)…`);
+
+    const [centroids, basisId] = await Promise.all([loadCachedCentroids(), loadActiveBasisId()]);
+    const effectiveBasisId = basisId || 'exemplar-basis:sha256:' + '0'.repeat(64); // no basis activated yet in this repo — see config/exemplar-basis/active.json
+
+    for (const span of paragraphs) {
+      const selector_id = await contentRef('selector', canonicalize({
+        source_id, representation_id, kind: 'text_position', text_position: { start: span.start, end: span.end },
+      }));
+      const observation_id = await contentRef('observation', canonicalize({ source_id, selector_id }));
+
+      pendingEvents.push(await makeEvent({
+        spec_version: SPEC_VERSION, event_type: 'observation.created', actor: actor(), run: run(),
+        payload: {
+          observation_id, source_id,
+          selector: { selector_id, source_id, representation_id, kind: 'text_position', text_position: { start: span.start, end: span.end } },
+        },
+      }));
+
+      const measurement = await measurePhasepost({ text: span.text, embedder, centroids, basisId: effectiveBasisId });
+      const declined = measurement.diagnostics.total_supported_amplitude < DECLINE_THRESHOLD_PPM;
+
+      if (declined) {
+        pendingEvents.push(await makeEvent({
+          spec_version: SPEC_VERSION, event_type: 'observation.declined', actor: actor(), run: run(),
+          payload: {
+            candidate_span_selector: { selector_id, source_id, representation_id, kind: 'text_position', text_position: { start: span.start, end: span.end } },
+            source_id, decline_reason: 'below_salience_threshold',
+            competence_gain_ppm: measurement.diagnostics.total_supported_amplitude,
+            refold_material: { representation_ids: [representation_id], artifact_uri: null },
+            gate_version: GATE_VERSION,
+          },
+        }));
+      } else {
+        pendingEvents.push(await makeEvent({
+          spec_version: SPEC_VERSION, event_type: 'observation.measured', actor: actor(), run: run(),
+          payload: { observation_id, ...measurement },
+        }));
+      }
+
+      spanRecords.push({ span, observation_id, selector_id, measurement, declined, flagged: false });
+      renderSpans();
+    }
+
+    setSourceStatus(`Done — ${paragraphs.length} span(s) measured against ${EMBEDDING_MODEL_REF}.`, 'ok');
+    $('#spans-fieldset').hidden = false;
+    $('#submit-fieldset').hidden = false;
+    updateEventCount();
+  }
+
+  function renderSpans() {
+    const list = $('#spans-list');
+    list.innerHTML = '';
+    spanRecords.forEach((rec, i) => {
+      const card = document.createElement('div');
+      card.className = `span-card${rec.declined && !rec.flagged ? ' declined' : ''}`;
+      const badges = [];
+      if (rec.flagged) badges.push('<span class="badge flagged">flagged</span>');
+      badges.push(rec.declined ? '<span class="badge declined">declined</span>' : '<span class="badge measured">measured</span>');
+      card.innerHTML = `
+        <div class="text">${escapeHtml(rec.span.text)}</div>
+        <div class="meta">
+          <span class="mono">entropy ${(rec.measurement.diagnostics.entropy_microunits / 1e6).toFixed(3)} bits</span>
+          <span class="mono">support ${(rec.measurement.diagnostics.total_supported_amplitude / 1e4).toFixed(1)}%</span>
+          ${badges.join(' ')}
+        </div>`;
+      const flagBtn = document.createElement('button');
+      flagBtn.className = 'subtle';
+      flagBtn.textContent = rec.flagged ? 'flagged ✓' : 'flag this span';
+      flagBtn.disabled = rec.flagged;
+      flagBtn.addEventListener('click', () => flagSpan(i));
+      card.appendChild(flagBtn);
+      list.appendChild(card);
+    });
+  }
+
+  async function flagSpan(i) {
+    const rec = spanRecords[i];
+    const reason = prompt('Why does this span matter, independent of its compression score? (SPEC.md §4.6 — the SIG operator, a flag not a fold)');
+    if (!reason) return;
+    pendingEvents.push(await makeEvent({
+      spec_version: SPEC_VERSION, event_type: 'observation.flagged', actor: actor(), run: run(),
+      payload: { observation_id: rec.observation_id, flagged_by: 'human', reason, weight_ppm: 1_000_000 },
+    }));
+    rec.flagged = true;
+    renderSpans();
+    updateEventCount();
+  }
+
+  function updateEventCount() { $('#event-count').textContent = String(pendingEvents.length); }
+
+  // ── submit: bundle everything into one batch, POST to the gateway ───
+  $('#submit-batch').addEventListener('click', async () => {
+    const gatewayBase = gatewayUrlInput.value.trim().replace(/\/+$/, '');
+    const submitStatus = $('#submit-status');
+    const submitLog = $('#submit-log');
+    if (!gatewayBase) { submitStatus.textContent = 'Set a gateway base URL first.'; submitStatus.className = 'status error'; return; }
+    if (!password) { submitStatus.textContent = 'Enter the gateway password first.'; submitStatus.className = 'status error'; return; }
+    if (!pendingEvents.length) { submitStatus.textContent = 'Nothing to submit yet.'; submitStatus.className = 'status error'; return; }
+
+    // Every pending event already carries currentBatchId in its hashed
+    // envelope (assigned at creation time in run(), above) — never patch
+    // batch_id in after the fact, that would silently invalidate event_id.
+    const batch = { batch_id: currentBatchId, submitted_at: new Date().toISOString(), events: pendingEvents.slice() };
+
+    submitStatus.textContent = 'Submitting…';
+    submitStatus.className = 'status';
+    try {
+      // NOTE: the gateway's exact auth header is not pinned by SPEC.md beyond
+      // "password-gated" (§8) — adjust this header to match your actual n8n
+      // webhook's expected auth if it differs.
+      const res = await fetch(`${gatewayBase}/webhook/eo/v1/batches`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-eopriors-password': password },
+        body: JSON.stringify(batch),
+      });
+      submitLog.hidden = false;
+      submitLog.textContent = `HTTP ${res.status}\n${await res.text().catch(() => '')}`;
+      if (res.status === 202) {
+        submitStatus.textContent = 'Accepted — this batch is now immutable history. No prior has changed yet; that happens when the projection workflow next runs (SPEC.md §10 step 4).';
+        submitStatus.className = 'status ok';
+        pendingEvents.length = 0;
+        currentBatchId = makeUuidRef(); // one-shot — the next batch needs a fresh id
+        updateEventCount();
+      } else if (res.status === 409) {
+        submitStatus.textContent = 'Duplicate batch_id — already landed, safe to stop.';
+        submitStatus.className = 'status';
+      } else {
+        submitStatus.textContent = `Rejected (${res.status}) — see the log below, fix the batch, and resubmit under a new batch_id (do not just resend this one).`;
+        submitStatus.className = 'status error';
+      }
+    } catch (err) {
+      submitStatus.textContent = `Network error reaching the gateway: ${err.message}`;
+      submitStatus.className = 'status error';
+    }
+  });
+
+  // ── basis inspector — read-only, no edit affordance (invariant 10) ──
+  async function renderBasisView() {
+    const summary = $('#basis-summary');
+    const grid = $('#basis-grid');
+    const [basisId, cellsRes] = await Promise.all([
+      loadActiveBasisId(),
+      fetch(new URL('./data/phasepost-cells.json', import.meta.url)),
+    ]);
+    const cellsDoc = await cellsRes.json();
+
+    let coverage = null;
+    if (basisId) {
+      try {
+        const hex = basisId.replace(/^exemplar-basis:sha256:/, '');
+        const candidate = await fetch(new URL(`./config/exemplar-basis/candidates/${hex}.json`, import.meta.url));
+        if (candidate.ok) coverage = (await candidate.json()).coverage;
+      } catch { /* fall through to the empty-state message below */ }
+    }
+
+    summary.textContent = basisId
+      ? `Active basis: ${basisId}`
+      : 'No basis has been activated yet (config/exemplar-basis/active.json is null). The grid below shows the 27-cell structure with no coverage data.';
+
+    const rows = Object.entries(cellsDoc.operators).map(([op, meta]) => {
+      const cells = ['Ground', 'Figure', 'Pattern'].map((grain) => {
+        const key = Object.keys(cellsDoc.cells).find((k) => cellsDoc.cells[k].op === op && cellsDoc.cells[k].grain === grain);
+        const count = coverage?.per_cell_count?.[key];
+        return `<td class="cell-count mono" title="${key}">${count ?? '—'}</td>`;
+      });
+      return `<tr><th>${op}<br><span class="mono" style="font-weight:400;color:var(--muted)">${meta.label}</span></th>${cells.join('')}</tr>`;
+    });
+
+    grid.innerHTML = `
+      <table class="grid">
+        <thead><tr><th>operator</th><th>Ground</th><th>Figure</th><th>Pattern</th></tr></thead>
+        <tbody>${rows.join('')}</tbody>
+      </table>`;
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+</script>

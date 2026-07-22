@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "selector.schema.json",
+  "title": "Selector",
+  "description": "Addresses a span within a source's recorded representation — how observation.created, observation.declined's candidate_span_selector, and evidence.* relate a claim back to exact bytes (SPEC.md invariant 9: every claim resolves to a source URI and selector). Modeled on the W3C Web Annotation TextQuoteSelector/TextPositionSelector pattern: a quote is robust to re-fetch drift, an offset is exact against one fixed representation — carrying both means a stale offset is still recoverable.",
+  "$defs": {
+    "sha256Ref": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+  },
+  "type": "object",
+  "required": ["selector_id", "source_id", "representation_id", "kind"],
+  "properties": {
+    "selector_id": { "type": "string", "pattern": "^selector:sha256:[0-9a-f]{64}$" },
+    "source_id": { "type": "string", "pattern": "^source:sha256:[0-9a-f]{64}$" },
+    "representation_id": {
+      "type": "string",
+      "pattern": "^representation:sha256:[0-9a-f]{64}$",
+      "description": "The exact fetched/computed representation these coordinates are relative to (observation.representation.computed) — never the live URI, which can change underfoot."
+    },
+    "kind": { "type": "string", "enum": ["text_position", "text_quote", "media_region"] },
+    "text_position": {
+      "type": "object",
+      "description": "Exact character offsets into representation_id's plain-text form. Present when kind is text_position, and recommended alongside text_quote even when kind is text_quote, as the fast path when the representation hasn't drifted.",
+      "required": ["start", "end"],
+      "properties": {
+        "start": { "type": "integer", "minimum": 0 },
+        "end": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "text_quote": {
+      "type": "object",
+      "description": "Exact text plus surrounding context, re-locatable even if offsets have drifted (e.g. the source was re-fetched and normalized differently).",
+      "required": ["exact"],
+      "properties": {
+        "exact": { "type": "string", "minLength": 1 },
+        "prefix": { "type": "string" },
+        "suffix": { "type": "string" }
+      }
+    },
+    "media_region": {
+      "type": "object",
+      "description": "Non-text span — a time range, a spatial region, or both, for audio/video/image sources.",
+      "properties": {
+        "t_start_ms": { "type": "integer", "minimum": 0 },
+        "t_end_ms": { "type": "integer", "minimum": 0 },
+        "xywh": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 0 },
+          "minItems": 4,
+          "maxItems": 4
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "kind": { "const": "text_position" } } },
+      "then": { "required": ["text_position"] }
+    },
+    {
+      "if": { "properties": { "kind": { "const": "text_quote" } } },
+      "then": { "required": ["text_quote"] }
+    },
+    {
+      "if": { "properties": { "kind": { "const": "media_region" } } },
+      "then": { "required": ["media_region"] }
+    }
+  ]
+}

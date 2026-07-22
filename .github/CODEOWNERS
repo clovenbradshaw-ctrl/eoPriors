@@ -1,0 +1,9 @@
+# SPEC.md §12: any PR touching these paths requires human review and may
+# contain no batch files alongside it (no silent widening next to a policy
+# change). Adjust the owner below to whoever should actually gate these — it
+# defaults to the repo owner.
+
+/schemas/                    @clovenbradshaw-ctrl
+/config/                     @clovenbradshaw-ctrl
+/config/exemplar-basis/      @clovenbradshaw-ctrl
+/.github/                    @clovenbradshaw-ctrl

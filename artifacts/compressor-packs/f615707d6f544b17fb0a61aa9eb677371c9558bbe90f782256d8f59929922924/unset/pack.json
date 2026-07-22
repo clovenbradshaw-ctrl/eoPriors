@@ -1,0 +1,9 @@
+{
+  "projection_id": "projection:sha256:f615707d6f544b17fb0a61aa9eb677371c9558bbe90f782256d8f59929922924",
+  "lens_id": "unset",
+  "basis_id": null,
+  "classifier": "eo-lexical-analysis-2.0",
+  "embedding_model": "Xenova/paraphrase-multilingual-MiniLM-L12-v2@2.17",
+  "holon_count": 0,
+  "built_at": "2026-07-22T20:18:34.127Z"
+}

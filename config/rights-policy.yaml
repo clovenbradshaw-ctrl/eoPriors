@@ -1,0 +1,34 @@
+# eoPriors — rights assessment policy (SPEC.md §4.2 source.rights.assessed).
+# Governs what source.rights.assessed events the gateway/CI will treat as a
+# legitimate basis for continuing to hold a source's fetched bytes. This is
+# policy, not enforcement code — the gateway validator and CI are the
+# enforcement; this file is what a human reviews when either one changes.
+
+spec_version: "1.0.0"
+
+# A source with no rights.assessed event yet is not thereby cleared to fold —
+# it is simply unassessed. Ingestion may proceed (fetch, segment, measure),
+# but a reader-facing surface should visibly flag an unassessed source rather
+# than presenting it the same as an assessed one.
+default_status_when_unassessed: "unknown"
+
+recognized_statuses:
+  - id: public_domain
+    may_retain_full_text: true
+    note: "Confirmed public domain — term expired, government work, or explicit dedication."
+  - id: licensed
+    may_retain_full_text: true
+    note: "Rights holder has granted a license covering this use; basis for the assessment goes in source.rights.assessed's `basis` field."
+  - id: fair_use_asserted
+    may_retain_full_text: true
+    note: "A stated fair-use rationale, not a guarantee — carries the heaviest review burden of the non-restricted statuses."
+  - id: restricted
+    may_retain_full_text: false
+    note: "Known rights holder objection or a jurisdiction where none of the above apply. Observations/measurements may still be retained (they are not the work itself); the fetched full text should not be."
+  - id: unknown
+    may_retain_full_text: false
+    note: "Not yet assessed. Treated conservatively until a source.rights.assessed event supersedes this."
+
+# Re-assessment is a new source.rights.assessed event, never an edit to a
+# prior one (invariant 7) — this policy does not change that; it only states
+# what CI checks a new assessment against.

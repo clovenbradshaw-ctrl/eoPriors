@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "measurement.schema.json",
+  "title": "Measurement",
+  "description": "A phasepost measurement: a span (an observation, or a candidate scoring its own source) scored against all 27 phasepost cells by eo-lexical-analysis-2.0, in the space of one exemplar basis. Structurally shared by observation.measured and exemplar.candidate.scored (SPEC.md §4.4, §5.2) — no phasepost claim anywhere in the system may skip this shape or report fewer than 27 cells (SPEC.md invariant 5).",
+  "$defs": {
+    "sha256Ref": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "ppmInteger": {
+      "type": "integer",
+      "description": "Parts-per-million scaled integer in [-1000000, 1000000]. No floats anywhere in payload (SPEC.md §4.1, invariant 4) — a similarity of 0.5 is carried as 500000.",
+      "minimum": -1000000,
+      "maximum": 1000000
+    },
+    "phasepostCellKey": {
+      "type": "string",
+      "description": "One of the 27 OP_Stance_Site cell keys. Must match a key in data/phasepost-cells.json exactly; that file, not this enum, is the source of truth if the two ever drift.",
+      "enum": [
+        "CON_Binding_Link", "CON_Tending_Field", "CON_Tracing_Network",
+        "DEF_Clearing_Atmosphere", "DEF_Dissecting_Lens", "DEF_Unraveling_Paradigm",
+        "EVA_Binding_Lens", "EVA_Tending_Atmosphere", "EVA_Tracing_Paradigm",
+        "INS_Composing_Kind", "INS_Cultivating_Void", "INS_Making_Entity",
+        "NUL_Clearing_Void", "NUL_Dissecting_Entity", "NUL_Unraveling_Kind",
+        "REC_Composing_Paradigm", "REC_Cultivating_Atmosphere", "REC_Making_Lens",
+        "SEG_Clearing_Field", "SEG_Dissecting_Link", "SEG_Unraveling_Network",
+        "SIG_Binding_Entity", "SIG_Tending_Void", "SIG_Tracing_Kind",
+        "SYN_Composing_Network", "SYN_Cultivating_Field", "SYN_Making_Link"
+      ]
+    },
+    "phasepostCellMeasurement": {
+      "type": "object",
+      "description": "One cell's raw measurement. Never collapsed to argmax or omitted for scoring near zero (invariant 5: '27 values, not just the winner') — a cell the span resembles not at all is still reported, as zero.",
+      "required": ["similarity_ppm", "amplitude_ppm"],
+      "additionalProperties": false,
+      "properties": {
+        "similarity_ppm": {
+          "$ref": "#/$defs/ppmInteger",
+          "description": "Raw cosine similarity between the span's embedding and this cell's centroid vector, scaled to ppm."
+        },
+        "amplitude_ppm": {
+          "$ref": "#/$defs/ppmInteger",
+          "minimum": 0,
+          "description": "This cell's share of total_supported_amplitude after normalization across all 27 cells (non-negative; similarity_ppm may be negative, amplitude_ppm never is)."
+        }
+      }
+    },
+    "phasepostMeasurements": {
+      "type": "object",
+      "description": "All 27 cells, always present, keyed by phasepostCellKey. A projection mixing measurements computed under two different embedding models/basis identities without declaring both lenses is invalid (invariant 11).",
+      "propertyNames": { "$ref": "#/$defs/phasepostCellKey" },
+      "minProperties": 27,
+      "maxProperties": 27,
+      "additionalProperties": { "$ref": "#/$defs/phasepostCellMeasurement" }
+    },
+    "diagnostics": {
+      "type": "object",
+      "required": ["entropy_microunits", "total_supported_amplitude"],
+      "additionalProperties": true,
+      "properties": {
+        "entropy_microunits": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Shannon entropy of the normalized 27-cell distribution, in micro-units (natural-log nats * 1e6), so a flat/uncommitted measurement and a sharply-peaked one are distinguishable at a glance."
+        },
+        "total_supported_amplitude": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000,
+          "description": "ppm-scaled sum of amplitude actually supported by measurable centroids (see src/compress.js) — less than 1000000 when some cells could not be scored."
+        }
+      }
+    }
+  },
+  "type": "object",
+  "required": ["measurement_id", "basis_id", "measurement_protocol", "phasepost_measurements", "diagnostics"],
+  "properties": {
+    "measurement_id": { "type": "string", "pattern": "^measurement:sha256:[0-9a-f]{64}$" },
+    "basis_id": { "type": "string", "pattern": "^exemplar-basis:sha256:[0-9a-f]{64}$" },
+    "measurement_protocol": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+@\\d+\\.\\d+\\.\\d+$",
+      "description": "Named, versioned algorithm, e.g. eo-compression@1.0.0 (src/compress.js MEASUREMENT_PROTOCOL constant)."
+    },
+    "phasepost_measurements": { "$ref": "#/$defs/phasepostMeasurements" },
+    "diagnostics": { "$ref": "#/$defs/diagnostics" }
+  }
+}

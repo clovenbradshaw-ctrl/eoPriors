@@ -1,0 +1,35 @@
+# eoPriors — emergence policy (SPEC.md §6). Tunes src/emergence.js's MDL
+# compression-gain condensation without touching code. scripts/build-projection.mjs
+# maps these snake_case keys onto the camelCase options src/emergence.js's
+# functions take. Its hash is pinned into every projection manifest's
+# policy_hashes.emergence-policy field — a policy change is visible in the
+# manifest even when the ledger itself didn't change.
+
+spec_version: "1.0.0"
+algorithm: "eo-emergence@1.0.0"
+
+# The fixed cost (in bits) of minting a holon's own prototype as a describable
+# thing, independent of how many observations support it. A merge's gain must
+# clear this before condensation is worth it — the guard against condensing
+# two or three barely-similar observations into a holon that saves almost
+# nothing. Higher = more conservative (fewer, better-supported holons).
+#
+# Calibration note: a single observation's entropy over the 27-cell phasepost
+# space is bounded by log2(27) ≈ 4.755 bits, and is typically much lower for a
+# confidently-measured span. This has to sit well under that ceiling or
+# nothing real ever clears it — 8 (a plausible-looking round number) is
+# actually too high; 1 bit ("one yes/no commitment's worth") is src/emergence.js's
+# own default and a reasonable starting point to retune from.
+mint_overhead_bits: 1
+
+# Max-overlap (Jaccard, on supporting-observation-id sets) a rebuilt holon
+# must clear against a previous-projection holon of the same grain to keep
+# that holon's identity (SPEC.md §6, last paragraph). Below this but above
+# zero, the match is ambiguous and recorded as a holon.identity.rebound audit
+# event rather than silently reassigned.
+identity_overlap_threshold: 0.5
+
+# Backstop only, not a tuning knob for "how many holons to allow" — the gain
+# formula itself decides when to stop merging. This just bounds worst-case
+# iteration if a batch is unexpectedly large.
+max_merge_rounds: 2000
