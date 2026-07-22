@@ -13,7 +13,8 @@
     "validate:batches": "node scripts/validate-batches.mjs",
     "build:projection": "node scripts/build-projection.mjs",
     "verify:determinism": "node scripts/verify-determinism.mjs",
-    "bridge:fold": "node scripts/run-fold-bridge.mjs"
+    "bridge:fold": "node scripts/run-fold-bridge.mjs",
+    "crossval:fold-priors": "node scripts/crossval-fold-priors.mjs"
   },
   "engines": {
     "node": ">=20"
