@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "representation.schema.json",
+  "title": "Representation (Fold)",
+  "description": "A reader's structured read of a span — the fold — as distinct from the compression of that read against a basis (measurement.schema.json). Carried by observation.representation.computed (SPEC.md §4.4a). The shape here is deliberately close to what an EO reader (e.g. eoreader4.2's src/perceiver/reading.js) already produces per span: a set of operator-tagged events at a grain, plus the two surprisal channels (novelty and Bayesian) that measure how much the read diverged from the reader's own running prior. src/fold.js turns this into a phasepost_measurements-shaped compression (eo-fold-compression@1.0.0) WITHOUT re-deriving it from an embedding — this is the structural, 'actually read' alternative to src/compress.js's cosine-against-centroids path, not a wrapper around it.",
+  "$defs": {
+    "operatorKey": {
+      "type": "string",
+      "description": "One of the nine EO operators (data/phasepost-cells.json 'operators'). Must match a key there; that file, not this enum, is the source of truth if the two ever drift.",
+      "enum": ["NUL", "SEG", "DEF", "SIG", "CON", "EVA", "INS", "SYN", "REC"]
+    },
+    "grainKey": {
+      "type": "string",
+      "description": "Which of the three grains this operator event was read at. Figure: the specific committed thing at this span (most per-span reader events land here). Ground: an ambient/prior condition the span was read against, not asserted by it. Pattern: an already-recurring identity or relation the span merely re-instances — reserved for the projector's own Figure→Pattern condensation (src/emergence.js); a single reader pass over one span should not be claiming Pattern-grain evidence itself.",
+      "enum": ["Ground", "Figure", "Pattern"]
+    },
+    "operatorEvent": {
+      "type": "object",
+      "description": "One piece of operator-tagged evidence from the read — e.g. reading.js's per-span `surprises` entries (each already carries an `op`), or the held/steady case (no surprise fired: NUL at Figure grain, non-transformation). weight_ppm is this event's own strength within the span's read, NOT yet normalized against the other events or against the 27-cell space — src/fold.js does that aggregation.",
+      "required": ["op", "grain", "weight_ppm"],
+      "additionalProperties": false,
+      "properties": {
+        "op": { "$ref": "#/$defs/operatorKey" },
+        "grain": { "$ref": "#/$defs/grainKey" },
+        "weight_ppm": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000,
+          "description": "Parts-per-million scaled non-negative strength (SPEC.md §4.1, invariant 4: no floats). Not a probability by itself — see src/fold.js's aggregation."
+        }
+      }
+    },
+    "fold": {
+      "type": "object",
+      "description": "The reader's structured read of one span. Deliberately NOT 27 cells wide — that projection is measurement's job, not representation's; a fold reports what the read actually found, in the reader's own vocabulary, and may find zero, one, or several operator events.",
+      "required": ["reader_version", "lens_id", "operator_events", "surprisal_bits", "bayes_bits", "held"],
+      "properties": {
+        "reader_version": {
+          "type": "string",
+          "pattern": "^[a-z0-9.-]+@\\d+\\.\\d+\\.\\d+$",
+          "description": "Which versioned reader produced this fold (e.g. eoreader4.2's perceiver version). A fold-basis and every fold measured against it are version-coupled to this exactly as lens.js's lens_id already couples a reading to its Lens — regenerating the pool with a different reader_version is a new basis, not an update to the old one."
+        },
+        "lens_id": {
+          "type": "string",
+          "description": "The reader's own Lens address for this read (eoreader4.2 perceiver/lens.js: '<horizon>@γ<gamma>[+<name>@<hash>]'). Two folds of the same span read under two different lenses are not comparable and must not be pooled into one basis without both lenses being declared (mirrors invariant 11)."
+        },
+        "operator_events": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/operatorEvent" },
+          "description": "Zero or more operator-tagged evidence pieces. Empty is legal and meaningful: a span read with nothing surprising and no bond/definition/instantiation firing is itself evidence (folds to NUL at Figure grain by src/fold.js's own default, not asserted here)."
+        },
+        "surprisal_bits": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "The NOVELTY channel (−log₂p), scaled to micro-bits (bits * 1e6) to stay an integer (invariant 4) — reading.js's surprisalBits, the audit/trace channel: how improbable this span was under the reader's running prior."
+        },
+        "bayes_bits": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "The SIGNIFICANCE channel (D_KL(posterior‖prior)), scaled to micro-bits — reading.js's bayesBits: how far the read moved the reader's belief, which can diagnostically disagree with surprisal_bits (Itti & Baldi's TV-snow case: maximally improbable, moves no belief)."
+        },
+        "held": {
+          "type": "boolean",
+          "description": "True when the span confirmed the reader's prediction and fired no operator event — reading.js's `held`. The absence of a surprise is itself a read, not a null result; src/fold.js folds a held span with no operator_events to NUL_Dissecting_Entity (hold / non-transformation) rather than to an empty, unscoreable measurement."
+        }
+      }
+    }
+  },
+  "type": "object",
+  "required": ["representation_id", "reader_version", "fold"],
+  "properties": {
+    "representation_id": { "type": "string", "pattern": "^representation:sha256:[0-9a-f]{64}$" },
+    "reader_version": { "$ref": "#/$defs/fold/properties/reader_version" },
+    "fold": { "$ref": "#/$defs/fold" }
+  }
+}
