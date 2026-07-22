@@ -148,7 +148,7 @@
   // write surface," so hardcoding it here is safe: it's already visible to
   // any browser client via view-source, same as the rest of this file. The
   // field below still overrides it, for local/alternate deployments.
-  const DEFAULT_GATEWAY_BASE_URL = 'https://n8n.intelechia.com/webhook-test';
+  const DEFAULT_GATEWAY_BASE_URL = 'https://n8n.intelechia.com/webhook';
 
   // ── in-memory session state — the password never leaves this closure ──
   let password = '';
@@ -407,12 +407,15 @@
     submitStatus.textContent = 'Submitting…';
     submitStatus.className = 'status';
     try {
-      // NOTE: the gateway's exact auth header is not pinned by SPEC.md beyond
-      // "password-gated" (§8) — adjust this header to match your actual n8n
-      // webhook's expected auth if it differs.
+      // The gateway reads the password from the standard Authorization header
+      // as `Bearer <password>` — the same scheme scripts/build-projection.mjs
+      // uses for head/publish. It must be Authorization (not a custom header):
+      // the webhook's CORS policy only allows `Authorization, Content-Type` on
+      // cross-origin requests, so a custom header like x-eopriors-password
+      // fails the preflight and the browser never sends the POST.
       const res = await fetch(`${gatewayBase}/eo/v1/batches`, {
         method: 'POST',
-        headers: { 'content-type': 'application/json', 'x-eopriors-password': password },
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${password}` },
         body: JSON.stringify(batch),
       });
       submitLog.hidden = false;
