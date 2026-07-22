@@ -393,7 +393,15 @@
 
   // ── submit: bundle everything into one batch, POST to the gateway ───
   $('#submit-batch').addEventListener('click', async () => {
-    const gatewayBase = (gatewayUrlInput.value.trim() || DEFAULT_GATEWAY_BASE_URL).replace(/\/+$/, '');
+    // Accept either the gateway base (…/webhook) or the full batches endpoint
+    // (…/webhook/eo/v1/batches) in the field — people naturally paste the whole
+    // URL, and a stale full URL can also be left over in localStorage. Strip a
+    // trailing /eo/v1/batches (and trailing slashes) before we append it below,
+    // so the path can never double into …/eo/v1/batches/eo/v1/batches, which
+    // n8n answers with a 500 "webhook is not registered".
+    const gatewayBase = (gatewayUrlInput.value.trim() || DEFAULT_GATEWAY_BASE_URL)
+      .replace(/\/+$/, '')
+      .replace(/\/eo\/v1\/batches$/, '');
     const submitStatus = $('#submit-status');
     const submitLog = $('#submit-log');
     if (!password) { submitStatus.textContent = 'Enter the gateway password first.'; submitStatus.className = 'status error'; return; }
@@ -402,7 +410,17 @@
     // Every pending event already carries currentBatchId in its hashed
     // envelope (assigned at creation time in run(), above) — never patch
     // batch_id in after the fact, that would silently invalidate event_id.
-    const batch = { batch_id: currentBatchId, submitted_at: new Date().toISOString(), events: pendingEvents.slice() };
+    //
+    // The envelope's batch_id, though, must be a BARE lowercase uuid: the
+    // gateway validates it against /^[0-9a-f]{8}-.../ and builds the batch
+    // file path from it, so the `uuid:` ref prefix makeUuidRef() adds (kept
+    // inside each event's run.batch_id, which the gateway treats as opaque
+    // hashed content) would fail that check with a 400. Strip it here only.
+    const batch = {
+      batch_id: currentBatchId.replace(/^uuid:/, ''),
+      submitted_at: new Date().toISOString(),
+      events: pendingEvents.slice(),
+    };
 
     submitStatus.textContent = 'Submitting…';
     submitStatus.className = 'status';
