@@ -54,6 +54,17 @@
       }
     },
 
+    "observationRepresentationComputedPayload": {
+      "type": "object",
+      "description": "The fold — a reader's structured read of a span (representation.schema.json), as distinct from the compression of that read against a basis (observation.measured). SPEC.md §4.4a. Introduced so a phasepost claim can come from a versioned reader's structural evidence (src/fold.js, eo-fold-compression@1.0.0) as well as from cosine-against-centroids (src/compress.js, eo-compression@1.0.0) — see invariant 5's amended wording.",
+      "required": ["observation_id", "representation_id", "reader_version", "fold"],
+      "properties": {
+        "observation_id": { "type": "string", "pattern": "^observation:sha256:[0-9a-f]{64}$" },
+        "representation_id": { "$ref": "representation.schema.json#/properties/representation_id" },
+        "reader_version": { "$ref": "representation.schema.json#/properties/reader_version" },
+        "fold": { "$ref": "representation.schema.json#/$defs/fold" }
+      }
+    },
     "observationMeasuredPayload": {
       "type": "object",
       "required": ["observation_id", "measurement_id", "basis_id", "measurement_protocol", "phasepost_measurements", "diagnostics"],
@@ -198,6 +209,7 @@
     "required": ["ledger_position"]
   },
   "allOf": [
+    { "if": { "properties": { "event_type": { "const": "observation.representation.computed" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/observationRepresentationComputedPayload" } } } },
     { "if": { "properties": { "event_type": { "const": "observation.measured" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/observationMeasuredPayload" } } } },
     { "if": { "properties": { "event_type": { "const": "exemplar.candidate.scored" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/exemplarCandidateScoredPayload" } } } },
     { "if": { "properties": { "event_type": { "const": "observation.declined" } } }, "then": { "properties": { "payload": { "$ref": "#/$defs/observationDeclinedPayload" } } } },

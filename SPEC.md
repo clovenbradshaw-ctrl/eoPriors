@@ -67,10 +67,20 @@ uses "prior," and the collision was real.
    Nothing is allowed to claim "reproduced" while depending on an
    unpinned or nondeterministic call.
 5. **No manual phasepost assignment, ever.** Every phasepost claim
-   comes from a run of `eo-lexical-analysis-2.0`, recorded in full
-   (27 values, not just the winner). This is the rule most likely to be
-   quietly violated under deadline pressure — it is enforced in CI
-   (§12), not left as a norm.
+   comes from a run of a versioned, deterministic classifier — either
+   `eo-lexical-analysis-2.0` (cosine against the active basis's
+   centroids, `src/compress.js`) or `eo-fold-compression@1.0.0`
+   (structural compression of a reader's own operator/grain evidence
+   against the cube's closed-form geometry, `src/fold.js`, §4.4a) —
+   recorded in full (27 values, not just the winner) either way. Never
+   a hand-typed cell. This is the rule most likely to be quietly
+   violated under deadline pressure — it is enforced in CI (§12), not
+   left as a norm.
+   *(Amended from v1's single-classifier wording: a second, reader-derived
+   source of phasepost claims was added in §4.4a. The invariant's actual
+   concern — no human or agent hand-assigns a cell, bypassing measurement
+   — is unchanged; only the count of legitimate versioned classifiers
+   that can satisfy it grew from one to two.)*
 6. **Holons are projected, never asserted.** An agent or a human may
    propose that observations belong together. Only the projector, given
    the current evidence and the versioned emergence rules, decides
@@ -115,7 +125,8 @@ eoPriors/
 │   ├── event.js                  ← canonical JSON + hashing (browser & Action)
 │   ├── segment.js                ← observation segmentation
 │   ├── embed.js                  ← embedding client (pinned model/version)
-│   ├── compress.js               ← compression against an active basis
+│   ├── compress.js               ← compression against an active basis (cosine)
+│   ├── fold.js                   ← compression of a reader's fold (§4.4a)
 │   ├── emergence.js              ← Figure/Pattern/Ground projection
 │   ├── replay.js                 ← DAG topological sort + projection build
 │   └── basis-select.js           ← exemplar selection algorithm
@@ -125,6 +136,7 @@ eoPriors/
 │   ├── source.schema.json
 │   ├── selector.schema.json
 │   ├── measurement.schema.json
+│   ├── representation.schema.json
 │   ├── exemplar-basis.schema.json
 │   └── projection-manifest.schema.json
 │
@@ -221,6 +233,67 @@ not specially.
   }
 }
 ```
+### 4.4a `observation.representation.computed` — the fold, and its compression
+Split from `observation.measured` (both were the same event in the v1
+scaffold, since v1 had only the cosine path and nothing to distinguish
+"the read" from "the compression of the read"). Representation is the
+reader's structured read of a span — schemas/representation.schema.json —
+carried separately so a fold can be recomputed against a drifted basis
+without re-reading the source, and so a reader's own version is pinned
+independent of which basis it's measured against:
+```json
+{
+  "event_type": "observation.representation.computed",
+  "payload": {
+    "observation_id": "observation:sha256:...",
+    "representation_id": "representation:sha256:...",
+    "reader_version": "eoreader4.2@1.0.0",
+    "fold": {
+      "reader_version": "eoreader4.2@1.0.0",
+      "lens_id": "recency@γ0.70",
+      "operator_events": [ { "op": "CON", "grain": "Figure", "weight_ppm": 1000000 } ],
+      "surprisal_bits": 2500000,
+      "bayes_bits": 1800000,
+      "held": false
+    }
+  }
+}
+```
+`operator_events` names one of the nine cube operators and which grain
+it was read at (Ground/Figure/Pattern) — the same vocabulary
+`data/phasepost-cells.json` already uses, and (not coincidentally) the
+same vocabulary an EO reader like eoreader4.2's `src/perceiver/reading.js`
+already tags each per-span surprise with. `surprisal_bits` (the NOVELTY
+channel, −log₂p) and `bayes_bits` (the SIGNIFICANCE channel, D_KL) are
+the reader's own two surprise measures, carried through rather than
+collapsed into one. A held span with no operator event is not absent
+data — `src/fold.js` folds it to `NUL_Dissecting_Entity` (hold /
+non-transformation at Figure grain), because a confirmed prediction is
+itself a read, not a null one.
+
+`src/fold.js`'s `measureFold` then compresses a fold against the 27-cell
+space exactly the way `src/compress.js`'s `measurePhasepost` compresses
+an embedding against it: same output shape (`phasepost_measurements` +
+`diagnostics` + content-addressed `measurement_id`), so `observation.measured`
+does not need to know or care which protocol produced what it's wrapping —
+only `measurement_protocol` says which one did (`eo-compression@1.0.0`
+vs `eo-fold-compression@1.0.0`). The (operator, grain) → cell mapping is
+closed-form, not learned: each operator's three cells in
+`data/phasepost-cells.json` already are exactly its Ground/Figure/Pattern
+grain, so there is nothing to fit and nothing that can silently drift
+except the cube geometry file itself, which both `basis-select.js` and
+`fold.js` load from the one place.
+
+**What this is not, yet.** This is the seam soldered on the eoPriors
+side of the join — the contract a fold must satisfy, and the compression
+math that consumes it — not a live pipe to an actual reader. eoreader4.2
+has no export path today and no dependency on this repo; nothing here
+calls it. A fold is, for now, anything that satisfies
+`representation.schema.json`, produced by hand, by a script, or (once
+built) by a real bridge to a reader. Wiring an actual reader in as the
+producer, and building the second exemplar basis this measurement
+protocol needs before it says anything a single cosine basis couldn't
+(§5.5, disagreement across lenses), are separate, larger pieces of work.
 A projection that mixes measurements from two `basis_id`s without
 declaring both lenses is invalid (invariant 11's teeth).
 ### 4.5 `observation.declined` — the discard ledger
