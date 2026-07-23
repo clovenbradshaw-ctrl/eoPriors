@@ -112,6 +112,12 @@
       <div id="spans-list"></div>
     </fieldset>
 
+    <fieldset id="claims-fieldset" hidden>
+      <legend>2b. Claims — what the reading actually extracted</legend>
+      <p class="status">Subject–verb–object relations and corroborated coreference merges, read by the vendored eoreader4.2 parser (src/read.js, extraction_protocol eoreader-parse@0.1.0) rather than inferred from a similarity score. Each carries the entity identity the parser resolved, so the same entity recurring across spans — and eventually across sources — has something stable to recur ON.</p>
+      <div id="claims-list"></div>
+    </fieldset>
+
     <fieldset id="submit-fieldset" hidden>
       <legend>3. Submit</legend>
       <p>This batch will carry <span id="event-count">0</span> event(s) under one new <code>batch_id</code>.</p>
@@ -136,7 +142,7 @@
 
 <script type="module">
   import { makeEvent, makeUuidRef, contentRef, canonicalize, sha256Ref, sha256Hex } from './src/event.js';
-  import { segmentObservations } from './src/segment.js';
+  import { extractReading, EXTRACTION_PROTOCOL } from './src/read.js';
   import { createEmbedder, EMBEDDING_MODEL_REF } from './src/embed.js';
   import { measurePhasepost, MEASUREMENT_PROTOCOL } from './src/compress.js';
 
@@ -172,6 +178,8 @@
   let currentSource = null; // { source_id, uri, text, content_sha256, representation_id }
   const pendingEvents = []; // events assembled so far, not yet submitted
   const spanRecords = []; // { span, observation_id, measurement, declined, flagged }
+  const relationRecords = []; // subject–verb–object claims extracted by src/read.js
+  const equivalenceRecords = []; // corroborated coreference merges extracted by src/read.js
 
   const $ = (sel) => document.querySelector(sel);
   const gatewayUrlInput = $('#gateway-url');
@@ -289,6 +297,16 @@
 
     pendingEvents.length = 0;
     spanRecords.length = 0;
+    relationRecords.length = 0;
+    equivalenceRecords.length = 0;
+    const entityRefCache = new Map(); // entity slug -> entity:sha256:... ref, one cache per ingest so a recurring entity (e.g. "Maria" then "Maria Alvarez") mints the same ref instead of hashing it twice
+    const entityRefFor = async (slug) => {
+      if (!slug) return null;
+      if (entityRefCache.has(slug)) return entityRefCache.get(slug);
+      const ref = await contentRef('entity', canonicalize({ source_id, entity_slug: slug }));
+      entityRefCache.set(slug, ref);
+      return ref;
+    };
 
     pendingEvents.push(await makeEvent({
       spec_version: SPEC_VERSION, event_type: 'source.discovered', actor: actor(), run: run(),
@@ -299,15 +317,22 @@
       payload: { source_id, content_sha256, byte_length: new TextEncoder().encode(text).length, content_type: 'text/plain' },
     }));
 
-    const { paragraphs } = segmentObservations(text);
-    setSourceStatus(`Segmented into ${paragraphs.length} paragraph-level span(s). Embedding + measuring against the active basis (first run downloads the MiniLM model — this can take a moment)…`);
+    // Real reading (src/read.js, wrapping the vendored eoreader4.2 parser) in
+    // place of a regex paragraph/sentence split: sentence boundaries, plus
+    // whatever subject–verb–object claims and coreference merges the parser
+    // found — the shapes the ledger can actually recognize as recurring
+    // evidence for the SAME thing, not just per-span metadata (SPEC.md §1's
+    // Figure/Pattern condensation needs that recurrence to have anywhere to
+    // land).
+    const reading = extractReading(text);
+    setSourceStatus(`Read ${reading.sentences.length} sentence(s), ${reading.relations.length} claim(s), ${reading.equivalences.length} coreference merge(s). Embedding + measuring against the active basis (first run downloads the MiniLM model — this can take a moment)…`);
 
     const [centroids, basisId] = await Promise.all([loadCachedCentroids(), loadActiveBasisId()]);
     const effectiveBasisId = basisId || 'exemplar-basis:sha256:' + '0'.repeat(64); // no basis activated yet in this repo — see config/exemplar-basis/active.json
 
-    for (const span of paragraphs) {
+    for (const sentence of reading.sentences) {
       const selector_id = await contentRef('selector', canonicalize({
-        source_id, representation_id, kind: 'text_position', text_position: { start: span.start, end: span.end },
+        source_id, representation_id, kind: 'text_position', text_position: { start: sentence.start, end: sentence.end },
       }));
       const observation_id = await contentRef('observation', canonicalize({ source_id, selector_id }));
 
@@ -315,18 +340,18 @@
         spec_version: SPEC_VERSION, event_type: 'observation.created', actor: actor(), run: run(),
         payload: {
           observation_id, source_id,
-          selector: { selector_id, source_id, representation_id, kind: 'text_position', text_position: { start: span.start, end: span.end } },
+          selector: { selector_id, source_id, representation_id, kind: 'text_position', text_position: { start: sentence.start, end: sentence.end } },
         },
       }));
 
-      const measurement = await measurePhasepost({ text: span.text, embedder, centroids, basisId: effectiveBasisId });
+      const measurement = await measurePhasepost({ text: sentence.text, embedder, centroids, basisId: effectiveBasisId });
       const declined = measurement.diagnostics.total_supported_amplitude < DECLINE_THRESHOLD_PPM;
 
       if (declined) {
         pendingEvents.push(await makeEvent({
           spec_version: SPEC_VERSION, event_type: 'observation.declined', actor: actor(), run: run(),
           payload: {
-            candidate_span_selector: { selector_id, source_id, representation_id, kind: 'text_position', text_position: { start: span.start, end: span.end } },
+            candidate_span_selector: { selector_id, source_id, representation_id, kind: 'text_position', text_position: { start: sentence.start, end: sentence.end } },
             source_id, decline_reason: 'below_salience_threshold',
             competence_gain_ppm: measurement.diagnostics.total_supported_amplitude,
             refold_material: { representation_ids: [representation_id], artifact_uri: null },
@@ -340,14 +365,102 @@
         }));
       }
 
-      spanRecords.push({ span, observation_id, selector_id, measurement, declined, flagged: false });
+      spanRecords.push({ span: sentence, observation_id, selector_id, measurement, declined, flagged: false });
       renderSpans();
     }
 
-    setSourceStatus(`Done — ${paragraphs.length} span(s) measured against ${EMBEDDING_MODEL_REF}.`, 'ok');
+    for (const rel of reading.relations) {
+      const relStart = Math.min(rel.subject.start, rel.verb?.start ?? rel.subject.start, rel.object.start);
+      const relEnd = Math.max(rel.subject.end, rel.verb?.end ?? rel.object.end, rel.object.end);
+      const selector_id = await contentRef('selector', canonicalize({
+        source_id, representation_id, kind: 'text_position', text_position: { start: relStart, end: relEnd },
+      }));
+      const [subjectRef, objectRef] = await Promise.all([entityRefFor(rel.subject.entitySlug), entityRefFor(rel.object.entitySlug)]);
+      const relation_id = await contentRef('relation', canonicalize({
+        source_id, selector_id, subject_entity_ref: subjectRef, object_entity_ref: objectRef, verb: rel.verb?.text ?? null,
+      }));
+
+      pendingEvents.push(await makeEvent({
+        spec_version: SPEC_VERSION, event_type: 'evidence.relation.observed', actor: actor(), run: run(),
+        payload: {
+          relation_id, source_id,
+          selector: { selector_id, source_id, representation_id, kind: 'text_position', text_position: { start: relStart, end: relEnd } },
+          subject: { entity_ref: subjectRef, text: rel.subject.text, text_position: { start: rel.subject.start, end: rel.subject.end } },
+          predicate: { text: rel.verb?.text ?? null },
+          object: { entity_ref: objectRef, text: rel.object.text, text_position: { start: rel.object.start, end: rel.object.end } },
+          relation_type: rel.relationType,
+          confidence_ppm: Math.max(0, Math.min(1_000_000, Math.round((rel.confidence ?? 0) * 1_000_000))),
+          extraction_protocol: EXTRACTION_PROTOCOL,
+          eo_notation: rel.notation,
+        },
+      }));
+      relationRecords.push(rel);
+    }
+
+    for (const eq of reading.equivalences) {
+      const entityRef = await entityRefFor(eq.entitySlug);
+      const hasPosition = eq.start != null && eq.end != null;
+      const selectorFields = hasPosition
+        ? { kind: 'text_position', text_position: { start: eq.start, end: eq.end }, text_quote: { exact: eq.label } }
+        : { kind: 'text_quote', text_quote: { exact: eq.label } };
+      const selector_id = await contentRef('selector', canonicalize({ source_id, representation_id, ...selectorFields }));
+      const equivalence_id = await contentRef('equivalence', canonicalize({ source_id, selector_id, entity_ref: entityRef, warrant: eq.warrant }));
+
+      pendingEvents.push(await makeEvent({
+        spec_version: SPEC_VERSION, event_type: 'evidence.equivalence.proposed', actor: actor(), run: run(),
+        payload: {
+          equivalence_id, source_id,
+          selector: { selector_id, source_id, representation_id, ...selectorFields },
+          proposed_text: eq.label,
+          entity_ref: entityRef,
+          warrant: eq.warrant,
+          match_kind: eq.matchKind,
+          verdict: 'corroborated',
+          extraction_protocol: EXTRACTION_PROTOCOL,
+        },
+      }));
+      equivalenceRecords.push(eq);
+    }
+
+    renderClaims();
+    setSourceStatus(`Done — ${reading.sentences.length} sentence(s) measured against ${EMBEDDING_MODEL_REF}, ${relationRecords.length} claim(s) and ${equivalenceRecords.length} coreference merge(s) extracted by ${EXTRACTION_PROTOCOL}.`, 'ok');
     $('#spans-fieldset').hidden = false;
     $('#submit-fieldset').hidden = false;
     updateEventCount();
+  }
+
+  function renderClaims() {
+    const fieldset = $('#claims-fieldset');
+    const list = $('#claims-list');
+    fieldset.hidden = relationRecords.length === 0 && equivalenceRecords.length === 0;
+    list.innerHTML = '';
+
+    relationRecords.forEach((rel) => {
+      const card = document.createElement('div');
+      card.className = 'span-card';
+      const pct = rel.confidence == null ? '—' : `${Math.round(rel.confidence * 100)}%`;
+      card.innerHTML = `
+        <div class="text"><strong>${escapeHtml(rel.subject.text)}</strong> —${escapeHtml(rel.verb?.text || '?')}→ <strong>${escapeHtml(rel.object.text)}</strong></div>
+        <div class="meta">
+          <span class="mono">${escapeHtml(rel.notation || rel.relationType || '')}</span>
+          <span class="mono">confidence ${pct}</span>
+          <span class="badge measured">relation</span>
+        </div>`;
+      list.appendChild(card);
+    });
+
+    equivalenceRecords.forEach((eq) => {
+      const card = document.createElement('div');
+      card.className = 'span-card';
+      card.innerHTML = `
+        <div class="text">"${escapeHtml(eq.label)}" = <strong>${escapeHtml(eq.entitySlug || '')}</strong></div>
+        <div class="meta">
+          <span class="mono">warrant ${escapeHtml(eq.warrant || 'unstated')}</span>
+          <span class="mono">match ${escapeHtml(eq.matchKind || 'unstated')}</span>
+          <span class="badge measured">coreference</span>
+        </div>`;
+      list.appendChild(card);
+    });
   }
 
   function renderSpans() {
