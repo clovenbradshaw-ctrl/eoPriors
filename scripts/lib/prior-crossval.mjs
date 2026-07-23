@@ -113,3 +113,25 @@ export function siteGroupsOf(cellsBundle, cellKeys) {
   }
   return groups;
 }
+
+// EVA/REC fire on ~every span (they're the reader's own always-present
+// evaluate/predict acts, not content), so any two observations share a huge
+// "free" Bhattacharyya similarity from EVA/REC alone regardless of how
+// different their actual content operators are — that can make
+// emergence.js's condensation collapse everything into one blob instead of
+// finding distinct patterns. Zero the excluded cells' amplitude and rescale
+// the rest back to sum to 1e6 — same phasepost_measurements shape
+// (`{cell: {amplitude_ppm, similarity_ppm}}`) fold.js/compress.js/emergence.js
+// all expect, just with the universal operators silenced rather than removed
+// from the key set (unlike restrictAndRenormalize, which works in plain
+// probability space and does shrink the key set).
+export function zeroExcludedAndRenormalize(phasepostMeasurements, excludedCells) {
+  const kept = Object.entries(phasepostMeasurements).filter(([c]) => !excludedCells.includes(c));
+  const sum = kept.reduce((s, [, m]) => s + m.amplitude_ppm, 0);
+  const out = {};
+  for (const [c, m] of Object.entries(phasepostMeasurements)) {
+    if (excludedCells.includes(c)) { out[c] = { ...m, amplitude_ppm: 0, similarity_ppm: 0 }; continue; }
+    out[c] = { ...m, amplitude_ppm: sum > 0 ? Math.round((m.amplitude_ppm / sum) * 1_000_000) : 0 };
+  }
+  return out;
+}

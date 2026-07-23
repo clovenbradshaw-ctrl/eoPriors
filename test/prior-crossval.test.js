@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { accumulate, normalize, restrictAndRenormalize, crossEntropy, entropyOfSpans, projectToGroups, siteGroupsOf } from '../scripts/lib/prior-crossval.mjs';
+import { accumulate, normalize, restrictAndRenormalize, crossEntropy, entropyOfSpans, projectToGroups, siteGroupsOf, zeroExcludedAndRenormalize } from '../scripts/lib/prior-crossval.mjs';
 
 const CELLS = ['A', 'B', 'C', 'D'];
 
@@ -100,4 +100,32 @@ test('siteGroupsOf partitions cells by their cube site, restricted to the given 
   assert.equal(groups.Entity.length, 3);
   assert.equal(groups.Link.length, 2);
   assert.equal(groups.Lens.length, 1); // EVA_Binding_Lens excluded — wasn't in contentKeys
+});
+
+test('zeroExcludedAndRenormalize zeroes the excluded cells and rescales the rest back to sum to 1e6', () => {
+  const measurements = {
+    EVA_Binding_Lens: { amplitude_ppm: 400_000, similarity_ppm: 400_000 },
+    REC_Making_Lens: { amplitude_ppm: 300_000, similarity_ppm: 300_000 },
+    CON_Binding_Link: { amplitude_ppm: 200_000, similarity_ppm: 200_000 },
+    INS_Making_Entity: { amplitude_ppm: 100_000, similarity_ppm: 100_000 },
+  };
+  const out = zeroExcludedAndRenormalize(measurements, ['EVA_Binding_Lens', 'REC_Making_Lens']);
+  assert.equal(out.EVA_Binding_Lens.amplitude_ppm, 0);
+  assert.equal(out.REC_Making_Lens.amplitude_ppm, 0);
+  // original 200k/300k split among the kept 300k total -> 2/3 and 1/3 of 1e6
+  assert.equal(out.CON_Binding_Link.amplitude_ppm, 666_667);
+  assert.equal(out.INS_Making_Entity.amplitude_ppm, 333_333);
+  const sum = Object.values(out).reduce((s, m) => s + m.amplitude_ppm, 0);
+  assert.equal(sum, 1_000_000);
+});
+
+test('zeroExcludedAndRenormalize on a measurement with ALL mass in excluded cells produces all-zero, not NaN/division-by-zero', () => {
+  const measurements = {
+    EVA_Binding_Lens: { amplitude_ppm: 600_000, similarity_ppm: 600_000 },
+    REC_Making_Lens: { amplitude_ppm: 400_000, similarity_ppm: 400_000 },
+    CON_Binding_Link: { amplitude_ppm: 0, similarity_ppm: 0 },
+  };
+  const out = zeroExcludedAndRenormalize(measurements, ['EVA_Binding_Lens', 'REC_Making_Lens']);
+  assert.equal(out.CON_Binding_Link.amplitude_ppm, 0);
+  assert.ok(!Number.isNaN(out.CON_Binding_Link.amplitude_ppm));
 });
