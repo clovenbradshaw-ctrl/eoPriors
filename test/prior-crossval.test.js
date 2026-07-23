@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { accumulate, normalize, restrictAndRenormalize, crossEntropy, entropyOfSpans } from '../scripts/lib/prior-crossval.mjs';
+import { accumulate, normalize, restrictAndRenormalize, crossEntropy, entropyOfSpans, projectToGroups, siteGroupsOf } from '../scripts/lib/prior-crossval.mjs';
 
 const CELLS = ['A', 'B', 'C', 'D'];
 
@@ -58,4 +58,46 @@ test('a uniform Q always costs exactly log2(cell count) bits, regardless of the 
   const Puniform = Object.fromEntries(CELLS.map((c) => [c, 1 / CELLS.length]));
   const ce = crossEntropy(spans, Puniform, CELLS);
   assert.ok(Math.abs(ce - Math.log2(CELLS.length)) < 1e-9);
+});
+
+test('projectToGroups sums member cells into a coarser space without needing renormalization', () => {
+  // {A,B} -> group1, {C,D} -> group2. A span already summing to 1 over A..D
+  // should still sum to 1 after projection — collapsing a partition never
+  // drops probability mass, unlike restricting to a genuine subset.
+  const spans = [{ A: 0.1, B: 0.2, C: 0.3, D: 0.4 }];
+  const grouping = { group1: ['A', 'B'], group2: ['C', 'D'] };
+  const [projected] = projectToGroups(spans, grouping);
+  assert.ok(Math.abs(projected.group1 - 0.3) < 1e-9);
+  assert.ok(Math.abs(projected.group2 - 0.7) < 1e-9);
+  const sum = Object.values(projected).reduce((s, x) => s + x, 0);
+  assert.ok(Math.abs(sum - 1) < 1e-9);
+});
+
+test('projecting all the way down to a single group collapses cross-entropy to exactly 0 bits — the bottom of the line carries no information by construction', () => {
+  const spans = [{ A: 0.1, B: 0.2, C: 0.3, D: 0.4 }, { A: 0.9, B: 0.05, C: 0.03, D: 0.02 }];
+  const grouping = { ALL: ['A', 'B', 'C', 'D'] };
+  const projected = projectToGroups(spans, grouping);
+  const Q = normalize(accumulate(projected, ['ALL']), ['ALL']);
+  const ce = crossEntropy(projected, Q, ['ALL']);
+  assert.ok(Math.abs(ce) < 1e-9, 'a single-bucket space has only one possible cell, so surprise is always 0');
+});
+
+test('siteGroupsOf partitions cells by their cube site, restricted to the given cellKeys', () => {
+  const cellsBundle = {
+    cells: {
+      NUL_Dissecting_Entity: { op: 'NUL', grain: 'Figure', site: 'Entity' },
+      SIG_Binding_Entity: { op: 'SIG', grain: 'Figure', site: 'Entity' },
+      INS_Making_Entity: { op: 'INS', grain: 'Figure', site: 'Entity' },
+      SEG_Dissecting_Link: { op: 'SEG', grain: 'Figure', site: 'Link' },
+      CON_Binding_Link: { op: 'CON', grain: 'Figure', site: 'Link' },
+      DEF_Dissecting_Lens: { op: 'DEF', grain: 'Figure', site: 'Lens' },
+      EVA_Binding_Lens: { op: 'EVA', grain: 'Figure', site: 'Lens' },
+    },
+  };
+  const contentKeys = ['NUL_Dissecting_Entity', 'SIG_Binding_Entity', 'INS_Making_Entity', 'SEG_Dissecting_Link', 'CON_Binding_Link', 'DEF_Dissecting_Lens'];
+  const groups = siteGroupsOf(cellsBundle, contentKeys);
+  assert.deepEqual(Object.keys(groups).sort(), ['Entity', 'Lens', 'Link']);
+  assert.equal(groups.Entity.length, 3);
+  assert.equal(groups.Link.length, 2);
+  assert.equal(groups.Lens.length, 1); // EVA_Binding_Lens excluded — wasn't in contentKeys
 });

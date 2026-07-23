@@ -52,17 +52,25 @@ export function restrictAndRenormalize(spans, cellKeys) {
   });
 }
 
-export function crossEntropy(spans, Q, cellKeys) {
-  let total = 0;
-  for (const probs of spans) {
+// Each span's OWN cross-entropy contribution under Q, in bits — the
+// per-observation surprise, not yet averaged. crossEntropy() is this array's
+// mean; keeping the array itself lets a caller look at spread (std-dev) and
+// correlate it against another per-span signal (e.g. a reader's own
+// intra-document surprisal), which the mean alone can't answer.
+export function perSpanSurprise(spans, Q, cellKeys) {
+  return spans.map((probs) => {
     let bits = 0;
     for (const c of cellKeys) {
       const p = probs[c] || 0;
       if (p > 0) bits += -p * Math.log2(Q[c]);
     }
-    total += bits;
-  }
-  return spans.length ? total / spans.length : 0;
+    return bits;
+  });
+}
+
+export function crossEntropy(spans, Q, cellKeys) {
+  const per = perSpanSurprise(spans, Q, cellKeys);
+  return per.length ? per.reduce((s, x) => s + x, 0) / per.length : 0;
 }
 
 // Entropy of the AGGREGATE distribution across a set of spans — that
@@ -72,4 +80,36 @@ export function entropyOfSpans(spans, cellKeys) {
   let h = 0;
   for (const c of cellKeys) if (dist[c] > 0) h += -dist[c] * Math.log2(dist[c]);
   return h;
+}
+
+// Collapse a set of already-renormalized spans into a COARSER cell space —
+// "how far down the divided line": a grouping like { Entity: [...3 cells],
+// Link: [...3 cells], Lens: [...1 cell] } sums each span's member-cell
+// probabilities into one group probability, producing a genuinely blurrier
+// projection (not a re-labeling) of the same underlying evidence. A span's
+// probabilities already sum to 1 over the input cellKeys, and group
+// membership partitions those same cellKeys, so the output already sums to 1
+// — no renormalization needed here (unlike restrictAndRenormalize, which
+// handles a genuine SUBSET that drops probability mass).
+export function projectToGroups(spans, grouping) {
+  const groupKeys = Object.keys(grouping);
+  return spans.map((probs) => {
+    const out = {};
+    for (const g of groupKeys) out[g] = grouping[g].reduce((s, c) => s + (probs[c] || 0), 0);
+    return out;
+  });
+}
+
+// Partitions cellsBundle's cells by `site`, restricted to the given cellKeys
+// (e.g. content-only, excluding the near-universal operators) — the site
+// groupings a "shadow" collapses each domain's three operators into (site is
+// shared by the operators of one domain at one grain: Entity is NUL/SIG/INS
+// at Figure, per data/phasepost-cells.json).
+export function siteGroupsOf(cellsBundle, cellKeys) {
+  const groups = {};
+  for (const key of cellKeys) {
+    const site = cellsBundle.cells[key].site;
+    (groups[site] ||= []).push(key);
+  }
+  return groups;
 }
