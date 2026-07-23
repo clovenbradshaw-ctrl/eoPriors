@@ -331,6 +331,75 @@ public-domain translations elsewhere on this list.
   not public domain despite being the most common bilingual edition
   professors assign
 
+## 16. Organic / community-authored content — provenance beyond copyright status
+
+Public domain and CC status answer a copyright question, not a composition
+question: "who did the composing, not just where the subject matter comes
+from." A colonial ethnographer's transcription of a folktale can be
+perfectly public domain and still not be organic to the culture — it's the
+culture's material run through someone else's selection, translation, and
+framing choices. This section separates content a culture produced about
+itself from a Western analytical lens laid over that culture's material,
+for anyone building a pocket where that distinction matters (not a concern
+specific to any one script in this repo — none of §1-15's Gutenberg/
+holy-texts/western-canon pulls were curated against this standard, they
+were sampled for general prose diversity instead).
+
+**Cut on this standard — real content, but the composing hand isn't the
+culture's own**
+
+- **SlaveVoyages** — meticulously documented, but by colonial shipping
+  ledgers, not by anything Malagasy, Yoruba, or Kongolese communities
+  produced about themselves.
+- **Gutenberg-era folklore collections** (Fansler, Day, Theal, Barker &
+  Sinclair, and similar 1890s-1930s colonial-officer/missionary
+  transcriptions) — the story *content* traces to the culture; the
+  selection, translation, and framing are the collector's. Needs
+  "collected-by" provenance labeling if used at all, not treatment as the
+  tradition's own voice.
+- **Global Jukebox Cantometrics** — the songs are real, but what you'd
+  actually ingest is Alan Lomax's 37-dimension coding schema applied to
+  them: a mid-century American ethnomusicologist's classification system,
+  not the tradition describing itself.
+- **D-PLACE** (Ethnographic Atlas, SCCS, Pulotu) — same shape, further from
+  organic: Murdock's and Binford's coding categories *are* the dataset.
+- **Indian court judgments** — a different issue, listed for contrast: real
+  and contemporary, but produced within a legal system inherited from
+  British colonial administration — not folk wisdom or indigenous
+  tradition, so a different category rather than a fit here at all.
+
+**Confirmed organic — self-produced by the culture, or self-selected
+literature within the language, public domain or CC0/CC-BY**
+
+| Content | Why it's organic | URL |
+|---|---|---|
+| Pali Canon + community translations | Ancient root text; translations done and licensed CC0 by the practicing Buddhist community itself, segment-aligned | https://github.com/suttacentral/bilara-data |
+| Classical Persian poetry (Hafez, Rumi, Ferdowsi, Saadi) | Self-authored civilizational canon, public domain | https://ganjoor.net · https://github.com/ganjoor · `api.ganjoor.net` |
+| Non-European Wikisource editions | Volunteer-selected, self-transcribed public-domain literature by speakers of the language | https://dumps.wikimedia.org (e.g. `tawikisource`, `bnwikisource`, `arwikisource`, `fawikisource`) |
+| Digital Library of India scans | Public-domain books written by Indian authors, in Indian languages | https://archive.org/details/digitallibraryindia |
+| Common Voice speech | Community-recorded, CC0, dozens of Global South languages | https://commonvoice.mozilla.org/en/datasets |
+| StoryWeaver | Contemporary stories authored by writers within the language communities, CC-BY | https://storyweaver.org.in |
+| African Storybook / Bloom Library | African-authored, CC-BY/CC | https://www.africanstorybook.org · https://bloomlibrary.org |
+| Nupepa | Hawaiian-language newspapers, run by and for Hawaiians, public domain (pre-1930) | https://nupepa.org |
+| Niupepa | Māori-run newspapers, same era | https://www.nzdl.org |
+| Ulukau | Hawaiian-language digital library | https://ulukau.org |
+
+**A named gap, not papered over**: an open Odu Ifá corpus — a living
+Yoruba oral-divination tradition with hundreds of thousands of verses,
+about as good a test case for "organic, at volume" as exists — does not
+appear to exist online. What's findable is academic secondary literature
+*about* Ifá (Abímbọ́lá's editions, journal articles): scholarship, not the
+primary corpus, in the open, from its own custodians. If that visible and
+that well-resourced a tradition hasn't been self-published in bulk, most
+other indigenous-run oral-history archives and native-transcribed
+proverb/song collections likely haven't either — worth treating as a real
+limit on what an "organic content" pocket can currently contain, not a gap
+to keep searching for indefinitely.
+
+None of the 9 confirmed sources above have a puller script in this repo
+yet — cataloguing precedes scripting here, same as §14/§15's GRETIL/
+ctext.org/Avestan/Sikh/cuneiform rows.
+
 ---
 
 ## Practical notes
@@ -355,5 +424,10 @@ public-domain translations elsewhere on this list.
   and **`scripts/shakespeare-corpus.py`** (this repo) cover the newer §14/§15
   sources — original-language scripture, classical/patristic texts, and the
   complete works of Shakespeare respectively. Each writes its own
-  `manifest.csv` in the same shape as the Gutenberg script; none of the
-  three have been wired into `run-fold-bridge.mjs` yet.
+  `manifest.csv` in the same shape as the Gutenberg script.
+  **`scripts/consolidate-corpus.mjs`** flattens all of the above (plus
+  journalism and diverse) into one directory `run-fold-bridge.mjs`/
+  `crossval-fold-priors.mjs` can read in a single pass, normalizing the two
+  holy-texts formats they can't parse as prose directly (Tanakh JSON, Greek
+  NT XML) — see that script's header for exactly what it includes/excludes
+  and why.
