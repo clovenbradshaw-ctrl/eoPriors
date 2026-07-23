@@ -77,6 +77,52 @@ export async function loadReader({ eoreaderPath } = {}) {
   return { createParser: parseMod.createParser, readingAt: readingMod.readingAt };
 }
 
+// Lazily imports eoreader4.2's MUSIC path — the same modality-blind readingAt,
+// but fed by the music organ (ingestMusic) instead of the text parser, and
+// parseMidi to decode Standard MIDI File bytes into notes first. This is the
+// concrete "same core, different perceiver" seam: ingestMusic emits INS + CON
+// onto the SAME EO log text uses (src/organs/in/music.js — each note an INS
+// at its pitch class, each consecutive interval a CON), so readingToFold and
+// measureFold consume a music doc identically to a text doc.
+//
+// Caveat worth knowing before interpreting music folds: the music organ emits
+// ONLY INS + CON (plus readingToFold's always-on EVA, conditional REC, and
+// held-NUL). It structurally cannot produce SEG/DEF/SYN/SIG folds — so a
+// music-vs-text comparison that finds "music lacks DEF" is partly reading the
+// organ's operator vocabulary, not a deep truth about music. Differences
+// WITHIN the shared INS/CON/NUL cells (e.g. music being far more CON-heavy)
+// are the non-tautological signal.
+export async function loadMusicReader({ eoreaderPath } = {}) {
+  const root = eoreaderPath || process.env.EOREADER_PATH || DEFAULT_EOREADER_PATH;
+  let musicMod, midiMod, readingMod;
+  try {
+    [musicMod, midiMod, readingMod] = await Promise.all([
+      import(path.join(root, 'src/organs/in/music.js')),
+      import(path.join(root, 'src/rooms/reader/midi.js')),
+      import(path.join(root, 'src/perceiver/reading.js')),
+    ]);
+  } catch (err) {
+    throw new Error(
+      `reader-bridge: couldn't load eoreader4.2 music path from "${root}" — checkout it ` +
+      `as a sibling of this repo, or set eoreaderPath/EOREADER_PATH. (${err.message})`
+    );
+  }
+  return { ingestMusic: musicMod.ingestMusic, parseMidi: midiMod.parseMidi, readingAt: readingMod.readingAt };
+}
+
+// MIDI bytes -> a music doc ready for readingAt, via the recipe
+// eoreader4.2's own import-file.js uses (parseMidi -> note objects ->
+// ingestMusic). Returns { doc, notesParsed }.
+export async function midiBytesToDoc(bytes, { name = 'midi', eoreaderPath } = {}) {
+  const { ingestMusic, parseMidi } = await loadMusicReader({ eoreaderPath });
+  const parsed = parseMidi(bytes);
+  const doc = ingestMusic({
+    name,
+    notes: parsed.notes.map((n) => ({ name: n.name, midi: n.midi, start: n.start, dur: n.dur, velocity: n.velocity, track: n.track, channel: n.channel })),
+  });
+  return { doc, notesParsed: parsed.notes.length };
+}
+
 export function synEventsAt(doc, at) {
   const events = typeof doc.log.snapshot === 'function' ? doc.log.snapshot() : (doc.log.events || []);
   return events.filter((e) => e.op === 'SYN' && e.sentIdx === at);

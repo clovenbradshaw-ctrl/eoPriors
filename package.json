@@ -18,7 +18,9 @@
     "experiment:reading-improvement": "node scripts/reading-improvement-experiment.mjs",
     "experiment:emergence": "node scripts/emergence-on-corpus.mjs",
     "experiment:genre-discrimination": "node scripts/genre-discrimination-experiment.mjs",
-    "probe:cross-modal": "node scripts/cross-modal-probe.mjs"
+    "probe:cross-modal": "node scripts/cross-modal-probe.mjs",
+    "probe:music-fold": "node scripts/music-fold-probe.mjs",
+    "experiment:native-metaphor": "node scripts/native-metaphor-experiment.mjs"
   },
   "engines": {
     "node": ">=20"
