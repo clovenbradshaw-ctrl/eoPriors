@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "calibration-pack.schema.json",
+  "title": "CalibrationPack@1",
+  "type": "object",
+  "required": [
+    "schema",
+    "pack_id",
+    "spec_version",
+    "operator_epoch",
+    "scope",
+    "provenance",
+    "reference_distributions"
+  ],
+  "properties": {
+    "schema": {
+      "const": "CalibrationPack@1"
+    },
+    "pack_id": {
+      "$ref": "pack-common.schema.json#/$defs/packId"
+    },
+    "spec_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "operator_epoch": {
+      "type": "string",
+      "pattern": "^eo-\\d{4}-\\d{2}$"
+    },
+    "scope": {
+      "$ref": "pack-common.schema.json#/$defs/scope"
+    },
+    "provenance": {
+      "$ref": "pack-common.schema.json#/$defs/provenance"
+    },
+    "reference_distributions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "metric",
+          "source_family",
+          "sample_size",
+          "algorithm_version",
+          "values",
+          "uncertainty"
+        ],
+        "properties": {
+          "metric": {
+            "type": "string"
+          },
+          "source_family": {
+            "type": "string"
+          },
+          "sample_size": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "algorithm_version": {
+            "type": "string",
+            "not": {
+              "pattern": "latest"
+            }
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^-?\\d+(\\.\\d+)?$"
+            }
+          },
+          "uncertainty": {
+            "$ref": "pack-common.schema.json#/$defs/uncertainty"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

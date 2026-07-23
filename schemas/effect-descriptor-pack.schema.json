@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "effect-descriptor-pack.schema.json",
+  "title": "EffectDescriptorPack@1",
+  "type": "object",
+  "required": [
+    "schema",
+    "pack_id",
+    "spec_version",
+    "operator_epoch",
+    "scope",
+    "provenance",
+    "effects"
+  ],
+  "properties": {
+    "schema": {
+      "const": "EffectDescriptorPack@1"
+    },
+    "pack_id": {
+      "$ref": "pack-common.schema.json#/$defs/packId"
+    },
+    "spec_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "operator_epoch": {
+      "type": "string",
+      "pattern": "^eo-\\d{4}-\\d{2}$"
+    },
+    "scope": {
+      "$ref": "pack-common.schema.json#/$defs/scope"
+    },
+    "provenance": {
+      "$ref": "pack-common.schema.json#/$defs/provenance"
+    },
+    "effects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "producer_model_id",
+          "input_schema",
+          "output_schema",
+          "canonical_configuration",
+          "determinism",
+          "limitations"
+        ],
+        "properties": {
+          "producer_model_id": {
+            "type": "string",
+            "not": {
+              "pattern": "latest"
+            }
+          },
+          "input_schema": {
+            "type": "object"
+          },
+          "output_schema": {
+            "type": "object"
+          },
+          "canonical_configuration": {
+            "type": "object"
+          },
+          "determinism": {
+            "enum": [
+              "reproduced",
+              "deterministic",
+              "best-effort",
+              "unreproduced"
+            ]
+          },
+          "limitations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "evaluation-report.schema.json",
+  "title": "EvaluationReport@1",
+  "type": "object",
+  "required": ["schema", "report_id", "candidate_pack_ids", "splits", "baselines", "metrics", "nulls", "leakage_audit_id", "rights_audit_id", "decision"],
+  "properties": {
+    "schema": { "const": "EvaluationReport@1" },
+    "report_id": { "type": "string", "pattern": "^evaluation:sha256:[0-9a-f]{64}$" },
+    "candidate_pack_ids": { "type": "array", "items": { "$ref": "pack-common.schema.json#/$defs/packId" } },
+    "splits": { "type": "object", "required": ["train", "validation", "test", "grouping_constraints", "stratification"], "properties": { "train": {"type":"array","items":{"type":"string"}}, "validation": {"type":"array","items":{"type":"string"}}, "test": {"type":"array","items":{"type":"string"}}, "grouping_constraints": {"type":"array","items":{"type":"string"}}, "temporal_split": {"type":"string"}, "stratification": {"type":"array","items":{"type":"string"}} }, "additionalProperties": false },
+    "baselines": { "type": "array", "items": { "type": "string" } },
+    "metrics": { "type": "array", "items": { "type": "object" } },
+    "nulls": { "type": "array", "items": { "type": "string" } },
+    "leakage_audit_id": { "type": "string", "pattern": "^leakage:sha256:[0-9a-f]{64}$" },
+    "rights_audit_id": { "type": "string", "pattern": "^rights-audit:sha256:[0-9a-f]{64}$" },
+    "decision": { "enum": ["advance", "decline", "qualify"] }
+  },
+  "additionalProperties": false
+}

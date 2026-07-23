@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "prior-snapshot.schema.json",
+  "title": "PriorSnapshot@1",
+  "type": "object",
+  "required": ["schema", "snapshot_id", "spec_version", "operator_epoch", "engine_compatibility", "scope", "packs", "governance_head", "build", "rights_manifest_id"],
+  "properties": {
+    "schema": { "const": "PriorSnapshot@1" },
+    "snapshot_id": { "type": "string", "pattern": "^prior:sha256:[0-9a-f]{64}$" },
+    "spec_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "operator_epoch": { "type": "string", "pattern": "^eo-\\d{4}-\\d{2}$" },
+    "engine_compatibility": { "type": "string", "minLength": 1, "not": { "pattern": "latest" } },
+    "scope": { "$ref": "#/$defs/scope" },
+    "packs": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/packRef" } },
+    "governance_head": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^event:sha256:[0-9a-f]{64}$" } },
+    "build": {
+      "type": "object",
+      "required": ["projector", "determinism", "policies", "algorithms", "corpus_splits", "basis_ids"],
+      "properties": {
+        "projector": { "type": "string", "minLength": 1, "not": { "pattern": "latest" } },
+        "determinism": { "enum": ["reproduced", "deterministic", "best-effort", "unreproduced"] },
+        "policies": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "algorithms": { "type": "array", "items": { "type": "string", "minLength": 1, "not": { "pattern": "latest" } } },
+        "corpus_splits": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "basis_ids": { "type": "array", "items": { "type": "string", "pattern": "^[a-z-]+:sha256:(?!0{64})[0-9a-f]{64}$" } }
+      },
+      "additionalProperties": false
+    },
+    "rights_manifest_id": { "type": "string", "pattern": "^rights:sha256:[0-9a-f]{64}$" },
+    "supersedes": { "type": "array", "items": { "type": "string", "pattern": "^prior:sha256:[0-9a-f]{64}$" } },
+    "limitations": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "scope": {
+      "type": "object",
+      "required": ["media_types", "languages", "domains", "source_families", "limitations"],
+      "properties": {
+        "media_types": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "languages": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "domains": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "source_families": { "type": "array", "items": { "enum": ["text", "audio", "tabular/time-series", "image", "code", "biological sequence", "mixed-media"] } },
+        "limitations": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      },
+      "additionalProperties": false
+    },
+    "packRef": {
+      "type": "object",
+      "required": ["pack_id", "pack_type", "schema", "content_hash"],
+      "properties": {
+        "pack_id": { "type": "string", "pattern": "^pack:sha256:[0-9a-f]{64}$" },
+        "pack_type": { "enum": ["observable-grammar", "transformation-grammar", "calibration", "exemplar-basis", "label-grounding", "effect-descriptor"] },
+        "schema": { "enum": ["ObservableGrammarPack@1", "TransformationGrammarPack@1", "CalibrationPack@1", "ExemplarBasisPack@1", "LabelGroundingPack@1", "EffectDescriptorPack@1"] },
+        "content_hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

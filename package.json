@@ -21,7 +21,8 @@
     "probe:cross-modal": "node scripts/cross-modal-probe.mjs",
     "probe:music-fold": "node scripts/music-fold-probe.mjs",
     "probe:dna-fold": "node scripts/dna-fold-probe.mjs",
-    "experiment:native-metaphor": "node scripts/native-metaphor-experiment.mjs"
+    "experiment:native-metaphor": "node scripts/native-metaphor-experiment.mjs",
+    "validate:prior-contracts": "node scripts/validate-prior-contracts.mjs"
   },
   "engines": {
     "node": ">=20"

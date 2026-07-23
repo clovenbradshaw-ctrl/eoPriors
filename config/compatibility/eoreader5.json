@@ -1,0 +1,11 @@
+{
+  "schema": "CompatibilityMatrix@1",
+  "operator_epoch": "eo-2026-07",
+  "engine_compatibility": ">=5.0.0 <6",
+  "spec_versions": ["PriorSnapshot@1"],
+  "constraints": [
+    "snapshots are immutable content-addressed data",
+    "EOReader5 may validate, ignore, partially use, or reject every pack",
+    "no snapshot may contain source-specific accepted memberships, parameters, or boundaries"
+  ]
+}

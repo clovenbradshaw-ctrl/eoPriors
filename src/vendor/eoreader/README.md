@@ -2,7 +2,7 @@
 
 This directory is a verbatim copy of a subset of
 [`clovenbradshaw-ctrl/eoreader4.2`](https://github.com/clovenbradshaw-ctrl/eoreader4.2),
-vendored (not fetched at runtime, not an npm dependency) for the same reason
+vendored as a pinned read-only evaluation fixture (not fetched at runtime, not an npm dependency) for the same reason
 `data/centroids-27.json` is vendored: a projection eoPriors declares
 `reproduced` must never depend on an external repository being reachable or
 unchanged (SPEC.md invariant 4).
