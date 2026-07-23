@@ -17,6 +17,7 @@ authoritative; this file is only a map and a quick start.
 - `config/` — library/rights/emergence policy, and the exemplar-basis pointer (CODEOWNERS-gated).
 - `batches/` — the ledger itself: immutable, create-only, one file per submission (§2 invariant 3).
 - `projections/`, `artifacts/` — deterministic, disposable rebuilds of the ledger (§2 invariant 1). Never hand-edit these; `npm run build:projection` (or the `build-projection` GitHub Action) is the only writer.
+- `priors/` — aggregate 27-cell fold distributions built from a real corpus by `scripts/build-corpus-prior.mjs`; regenerable, not the exemplar basis (that's `config/exemplar-basis/`, human-gated).
 - `scripts/` — the Node-side glue between the filesystem and `src/replay.js`'s pure projection logic.
 
 ## The gateway

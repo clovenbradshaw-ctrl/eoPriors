@@ -31,11 +31,19 @@
 //     different modality (source code), already scoped for
 //     scripts/cross-modal-probe.mjs, not this prose-fold-prior corpus.
 //
+// EXCLUDED_GUTENBERG_IDS below are three ids dropped after a content audit
+// of this stratified sample (docs/corpus-sources.md §16). Not a systematic
+// scan — other ids pulled by a future run of gutenberg-corpus.py aren't
+// covered by this list and would need the same check.
+//
 // Usage:
 //   node scripts/consolidate-corpus.mjs --sources <dir1> [<dir2> ...] --out <flatDir>
 
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
+
+// See the file header for why each of these was pulled from the corpus.
+const EXCLUDED_GUTENBERG_IDS = new Set(['pg12565', 'pg34675', 'pg24995']);
 
 function parseArgs(argv) {
   const sources = [];
@@ -113,6 +121,7 @@ function main() {
       if (collection === 'greek_nt' && rel.includes(`nestle1904${path.sep}`)) { skipped++; continue; }
       if (/^code_/.test(base)) { skipped++; continue; } // separate modality (cross-modal-probe)
       if (base === 'manifest.csv' || base === 'README.md' || base === 'LICENSE' || base.startsWith('.')) { skipped++; continue; }
+      if (collection === 'gutenberg' && EXCLUDED_GUTENBERG_IDS.has(base.replace(/\.txt$/, ''))) { skipped++; continue; }
 
       if (collection === 'tanakh' && base.endsWith('.json')) {
         const text = tanakhJsonToText(file);
