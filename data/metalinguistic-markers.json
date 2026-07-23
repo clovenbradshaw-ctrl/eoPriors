@@ -1,0 +1,21 @@
+{
+  "metadata": {
+    "description": "Learned metalinguistic boundary markers — words used to explicitly delimit units across modalities",
+    "created": "2026-07-23",
+    "version": "1.0.0"
+  },
+  "markers": {
+    "full stop": ".",
+    "period": ".",
+    "exclamation": "!",
+    "exclamation mark": "!",
+    "question": "?",
+    "question mark": "?",
+    "semicolon": ";",
+    "colon": ":",
+    "done": ".",
+    "complete": ".",
+    "end": ".",
+    "finished": "."
+  }
+}
