@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "exemplar-basis-pack.schema.json",
+  "title": "ExemplarBasisPack@1",
+  "type": "object",
+  "required": [
+    "schema",
+    "pack_id",
+    "spec_version",
+    "operator_epoch",
+    "scope",
+    "provenance",
+    "basis_id",
+    "measurement_protocol",
+    "exemplars",
+    "retained_lenses"
+  ],
+  "properties": {
+    "schema": {
+      "const": "ExemplarBasisPack@1"
+    },
+    "pack_id": {
+      "$ref": "pack-common.schema.json#/$defs/packId"
+    },
+    "spec_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "operator_epoch": {
+      "type": "string",
+      "pattern": "^eo-\\d{4}-\\d{2}$"
+    },
+    "scope": {
+      "$ref": "pack-common.schema.json#/$defs/scope"
+    },
+    "provenance": {
+      "$ref": "pack-common.schema.json#/$defs/provenance"
+    },
+    "basis_id": {
+      "$ref": "pack-common.schema.json#/$defs/basisId"
+    },
+    "measurement_protocol": {
+      "type": "string"
+    },
+    "exemplars": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "retained_lenses": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

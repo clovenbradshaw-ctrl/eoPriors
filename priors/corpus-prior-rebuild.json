@@ -303,5 +303,18 @@
     "REC_Cultivating_Atmosphere": 1,
     "REC_Making_Lens": 360529,
     "REC_Composing_Paradigm": 1
+  },
+  "prior_scope": {
+    "status": "experimental-history",
+    "source_families": [
+      "text"
+    ],
+    "reader_scope": "eoreader4.2 folds",
+    "operator_epoch": "eo-2026-07",
+    "limitations": [
+      "text-heavy corpus prior; not a universal cross-modal prior",
+      "not a default EOReader5 snapshot for WAV or tabular sources",
+      "release-grade publication blocked until basis lineage is complete"
+    ]
   }
 }

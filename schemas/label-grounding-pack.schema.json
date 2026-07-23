@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "label-grounding-pack.schema.json",
+  "title": "LabelGroundingPack@1",
+  "type": "object",
+  "required": [
+    "schema",
+    "pack_id",
+    "spec_version",
+    "operator_epoch",
+    "scope",
+    "provenance",
+    "labels"
+  ],
+  "properties": {
+    "schema": {
+      "const": "LabelGroundingPack@1"
+    },
+    "pack_id": {
+      "$ref": "pack-common.schema.json#/$defs/packId"
+    },
+    "spec_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "operator_epoch": {
+      "type": "string",
+      "pattern": "^eo-\\d{4}-\\d{2}$"
+    },
+    "scope": {
+      "$ref": "pack-common.schema.json#/$defs/scope"
+    },
+    "provenance": {
+      "$ref": "pack-common.schema.json#/$defs/provenance"
+    },
+    "labels": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "label_resource_id",
+          "language",
+          "applicability_predicates",
+          "evidence",
+          "confidence",
+          "counterexamples"
+        ],
+        "properties": {
+          "label_resource_id": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "applicability_predicates": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "confidence": {
+            "type": "string",
+            "pattern": "^-?\\d+(\\.\\d+)?$"
+          },
+          "counterexamples": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

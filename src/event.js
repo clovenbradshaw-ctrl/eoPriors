@@ -21,6 +21,9 @@ export const GATEWAY_WRITABLE_EVENT_TYPES = Object.freeze([
   'evidence.relation.observed',
   'event.retracted', 'event.superseded', 'selector.corrected',
   'exemplar.candidate.scored', 'exemplar.basis.selected',
+  'grammar.candidate.proposed', 'grammar.candidate.evaluated',
+  'calibration.run.recorded',
+  'label.resource.proposed', 'label.resource.evaluated',
 ]);
 
 export const PROJECTOR_ONLY_EVENT_TYPES = Object.freeze([
@@ -29,6 +32,11 @@ export const PROJECTOR_ONLY_EVENT_TYPES = Object.freeze([
   'policy.activated', 'projector.activated',
   'exemplar.basis.activated',
   'compressor_pack.activated',
+  'grammar.pack.selected', 'grammar.pack.activated',
+  'calibration.pack.selected', 'calibration.pack.activated',
+  'label.resource.activated',
+  'prior.snapshot.proposed', 'prior.snapshot.validated', 'prior.snapshot.published', 'prior.snapshot.superseded',
+  'compatibility.assessed', 'leakage.audit.completed', 'rights.audit.completed',
 ]);
 
 const WRITABLE_SET = new Set(GATEWAY_WRITABLE_EVENT_TYPES);
