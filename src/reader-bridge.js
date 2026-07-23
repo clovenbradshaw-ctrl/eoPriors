@@ -49,9 +49,23 @@
 
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readFileSync } from 'node:fs';
 
 const REPO_ROOT = path.resolve(fileURLToPath(new URL('../', import.meta.url)));
 const DEFAULT_EOREADER_PATH = path.resolve(REPO_ROOT, '..', 'eoreader4.2');
+
+// Load metalinguistic markers from eoPriors conventions
+export const loadMetalinguisticMarkers = () => {
+  try {
+    const markersPath = path.join(REPO_ROOT, 'data', 'metalinguistic-markers.json');
+    const data = JSON.parse(readFileSync(markersPath, 'utf8'));
+    const markerMap = new Map(Object.entries(data.markers || {}));
+    return markerMap;
+  } catch (err) {
+    // Markers file not found or invalid; continue with empty
+    return new Map();
+  }
+};
 
 export const READER_VERSION = 'eoreader4.2@1.0.0';
 
