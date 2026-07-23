@@ -60,7 +60,7 @@ async function main() {
   const firstFolds = [];
   const n = Math.min(units.length, maxSpans);
   for (let i = 0; i < n; i++) {
-    const reading = readingAt(doc, i);
+    const reading = readingAt(doc, i, { terrains: true });
     const fold = readingToFold(doc, i, reading);
     const m = await measureFold({ fold, cellsBundle, basisId: FOLD_BASIS_ID });
     spans++;

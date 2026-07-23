@@ -38,14 +38,31 @@
 //                      array on every span, so the fallback would otherwise
 //                      never fire again.
 //
-// Figure operator_events come from per-span content. Ground operator_events are
-// admitted only when reading.js exposes its own three prior channels: Void
-// (novelty reserve), Field (standing bonds), and Atmosphere (standing
-// propositions). Pattern remains emergence.js's condensation layer; the bridge
-// still does not fabricate Pattern cells from a single reader pass.
+// Figure operator_events come from per-span content. Ground operator_events come
+// from two independent sources:
+//   - reading.js's opt-in `{ terrains: true }` Ground row (groundEventsFor) —
+//     three SITES (Void/Field/Atmosphere, one per EO domain) x three STANCES
+//     (cultivating/clearing/tending, the Generate/Differentiate/Relate modes),
+//     all nine real, separable quantities reading.js already computes from its
+//     own locals (priorMass/priorBond/priorProp/reserves/this-span recurrence).
+//   - a real SYN merge/alias on the log, ADDED on top of the systematic Field
+//     row: a merge restructures the Field itself (the set of nodes it operates
+//     over), not just a Figure-grain link — readingToFold, ~15/3379 spans on a
+//     full Frankenstein read, rare and real, not fabricated.
+// A NUL-birth Ground signal was considered and rejected: eoreader4.2's parse
+// pipeline logs a `kind:'span'` NUL on literally every sentence (the 1:1
+// retention hold, pipeline.js:363), so treating log-NUL as a "re-grounding"
+// event would inject constant noise into every span, not sparse structural
+// signal — the opposite of what every other Ground source here is for.
+// Pattern remains emergence.js's condensation layer (a holon *tier*, not a
+// phasepost *grain* — see emergence.js's own header); the bridge still does
+// not fabricate Pattern-grain cells from a single reader pass.
 //
-// Equal weight per event: reading.js gives no per-event confidence to split
-// by, so equal-split is the neutral first-cut policy, not a tuned one.
+// Units, not raw ppm hints: each event carries a `units` weight (content
+// events default to 1 each — equal weight, since reading.js gives no
+// per-event confidence to split by); the final pass normalizes every event's
+// units to weight_ppm proportionally, in one place, for both Figure and
+// Ground events alike.
 
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -183,70 +200,85 @@ export function synEventsAt(doc, at) {
   return events.filter((e) => e.op === 'SYN' && e.sentIdx === at);
 }
 
-// reading.ground's REAL shape (eoreader4.2 src/perceiver/reading.js:326-334, locked in by
-// its own tests/smoke.test.js): { novelty: {mass, probability}, bonds: {mass}, propositions:
-// {mass, axes} } — nested objects, field names novelty/bonds/propositions, and `mass` is a
-// raw structural quantity (a reserve amplitude, a Set.size bond count, a decayed proposition
-// sum), NOT a ppm-scaled probability. An earlier version of this function guessed at flat
-// ppm field names (novelty_ppm/field_ppm/atmosphere_ppm) that eoreader4.2 never produced —
-// every guess missed, groundEventsFor silently returned [] for every real reading, and the
-// Ground grain (9 of the 27 phasepost cells) went dark for every fold ever built through this
-// bridge. Confirmed empirically: 0 Ground-grain events across a complete Frankenstein read
-// (3364 spans), despite reading.ground carrying real, growing prior mass throughout (bond
-// count 44→1570, proposition mass tracked across up to 3374 axes).
-//
-// Fix: read the real field names, and normalize the three raw masses to a SHARE of their own
-// sum (not an absolute probability — bonds.mass/propositions.mass are unbounded counts/sums,
-// not proportions, so there is no principled absolute ppm for them the way pNovel already is
-// for novelty). This answers the question readingToFold actually needs answered — "of the
-// Ground evidence standing at this span, how should its fold weight split across Void/Field/
-// Atmosphere" — using only quantities eoreader4.2 already computes, nothing invented to fill
-// a channel with no genuine evidence behind it.
+// reading.ground's REAL shape when read with `{ terrains: true }` (eoreader4.2
+// src/perceiver/reading.js, opt-in — omitted, reading.ground is undefined, the
+// parity gate): { void, field, atmosphere } x { cultivating, clearing, tending },
+// nine real numbers straight off reading.js's own locals — not a ppm-scaled
+// probability, and not on comparable scales to each other (cultivating mass
+// grows unboundedly across a document, clearing sits near a constant ~1, tending
+// is a small per-span recurrence count). Pooling the nine raw magnitudes directly
+// would let cultivating swamp the other two stances and leave six of the nine
+// Ground cells effectively dark despite carrying real information — this is why
+// normalization happens PER STANCE first (equal share to each of the up to three
+// active stances), THEN within a stance across its three sites by amplitude.
+// (site, stance) -> operator is fixed by the cube geometry (data/phasepost-
+// cells.json): each site's three Ground cells are exactly its Clearing/Tending/
+// Cultivating operators.
+const GROUND_OPS = {
+  void:       { cultivating: 'INS', clearing: 'NUL', tending: 'SIG' },
+  field:      { cultivating: 'SYN', clearing: 'SEG', tending: 'CON' },
+  atmosphere: { cultivating: 'REC', clearing: 'DEF', tending: 'EVA' },
+};
+const GROUND_STANCES = ['cultivating', 'clearing', 'tending'];
+const GROUND_SITES = ['void', 'field', 'atmosphere'];
+
 function groundEventsFor(reading) {
   const g = reading.ground;
   if (!g || typeof g !== 'object') return [];
-  const noveltyMass = Math.max(0, Number(g.novelty?.mass) || 0);
-  const fieldMass = Math.max(0, Number(g.bonds?.mass) || 0);
-  const atmosphereMass = Math.max(0, Number(g.propositions?.mass) || 0);
-  const total = noveltyMass + fieldMass + atmosphereMass;
-  if (total <= 0) return [];
-  const share = (m) => Math.max(0, Math.min(1_000_000, Math.round((m / total) * 1_000_000)));
   const events = [];
-  const novelty = share(noveltyMass);
-  const field = share(fieldMass);
-  const atmosphere = share(atmosphereMass);
-  if (novelty > 0) events.push({ op: 'INS', grain: 'Ground', weight_hint_ppm: novelty, source: 'ground:novelty' });
-  if (field > 0) events.push({ op: 'CON', grain: 'Ground', weight_hint_ppm: field, source: 'ground:field' });
-  if (atmosphere > 0) events.push({ op: 'REC', grain: 'Ground', weight_hint_ppm: atmosphere, source: 'ground:atmosphere' });
+  const activeStances = GROUND_STANCES.filter((st) => GROUND_SITES.reduce((s, site) => s + (g[site]?.[st] || 0), 0) > 0);
+  const stanceUnits = activeStances.length ? 1 / activeStances.length : 0;
+  for (const stance of activeStances) {
+    const stanceTotal = GROUND_SITES.reduce((s, site) => s + (g[site]?.[stance] || 0), 0);
+    for (const site of GROUND_SITES) {
+      const amp = g[site]?.[stance] || 0;
+      if (amp > 0) events.push({ op: GROUND_OPS[site][stance], grain: 'Ground', units: stanceUnits * (amp / stanceTotal), source: `ground:${site}.${stance}` });
+    }
+  }
   return events;
 }
 
 export function readingToFold(doc, at, reading) {
-  const contentEvents = (reading.surprises || []).map((s) => ({ op: s.op, grain: 'Figure' }));
-  for (const _syn of synEventsAt(doc, at)) contentEvents.push({ op: 'SYN', grain: 'Figure' });
+  const contentEvents = (reading.surprises || []).map((s) => ({ op: s.op, grain: 'Figure', units: 1 }));
+  const synHere = synEventsAt(doc, at);
+  for (const _syn of synHere) contentEvents.push({ op: 'SYN', grain: 'Figure', units: 1 });
 
-  const events = [...contentEvents, ...groundEventsFor(reading)];
-  if (reading.held && contentEvents.length === 0) events.push({ op: 'NUL', grain: 'Figure' });
+  // A real SYN merge/alias doesn't only add a Figure-grain link — it restructures the
+  // Field ITSELF (Structure x Ground): the set of nodes the Field prior operates over
+  // just changed, not merely one more bond between existing ones. reading.js's own
+  // priorBond only ever accumulates CON/SIG (reading.js:132-133), so this Ground-level
+  // consequence of a real merge is otherwise invisible to the systematic field.cultivating
+  // channel above (that channel reads the STANDING bond count, not a discrete event) —
+  // added here once per real SYN event on the log, ON TOP of whatever groundEventsFor's
+  // per-stance normalization already contributes to SYN_Cultivating_Field, exactly like
+  // its Figure-grain sibling above, never fabricated when synHere is empty. Checked
+  // against a complete Frankenstein read before wiring this: 15/3379 spans (0.44%) carry
+  // a real merge/alias SYN with a genuine sentIdx — rare and structurally real, not
+  // manufactured to fill a cell (unlike an earlier NUL-birth idea for this same slot,
+  // which turned out to fire on literally every span — see reader-bridge.test.js's
+  // sibling comment). Weighted like other discrete, significant per-span events
+  // (units: 1, the same class as EVA/REC/a Figure surprise), not like the continuous
+  // Ground channels' fractional stance-shares.
+  const groundSynEvents = synHere.map(() => ({ op: 'SYN', grain: 'Ground', units: 1, source: 'ground:syn-merge' }));
+
+  const events = [...contentEvents, ...groundEventsFor(reading), ...groundSynEvents];
+  if (reading.held && contentEvents.length === 0) events.push({ op: 'NUL', grain: 'Figure', units: 1 });
 
   const predicted = reading.predicted;
   if (predicted && (predicted.figures?.length || predicted.bonds?.length)) {
-    events.push({ op: 'REC', grain: 'Figure' });
+    events.push({ op: 'REC', grain: 'Figure', units: 1 });
   }
   // reading.evaluation is unconditionally present (reading.js:305) — the
   // reading evaluates every line, held or not.
-  events.push({ op: 'EVA', grain: 'Figure' });
+  events.push({ op: 'EVA', grain: 'Figure', units: 1 });
 
-  const hinted = events.some((e) => Number.isInteger(e.weight_hint_ppm));
-  const eventHint = (e) => Number.isInteger(e.weight_hint_ppm) ? e.weight_hint_ppm : 1_000_000;
-  const totalHint = hinted ? events.reduce((s, e) => s + eventHint(e), 0) : 0;
+  const totalUnits = events.reduce((s, e) => s + e.units, 0);
   let allocated = 0;
-  const weightEach = events.length ? Math.floor(1_000_000 / events.length) : 0;
   const operator_events = events.map((e, i) => {
-    const { weight_hint_ppm, ...event } = e;
-    const weight_ppm = hinted && totalHint > 0
-      ? (i === events.length - 1 ? 1_000_000 - allocated : Math.round((eventHint(e) / totalHint) * 1_000_000))
-      : (i === events.length - 1 ? 1_000_000 - weightEach * (events.length - 1) : weightEach);
-    allocated += i === events.length - 1 ? 0 : weight_ppm;
+    const { units, ...event } = e;
+    const isLast = i === events.length - 1;
+    const weight_ppm = isLast ? 1_000_000 - allocated : Math.round((units / totalUnits) * 1_000_000);
+    if (!isLast) allocated += weight_ppm;
     return { ...event, weight_ppm };
   });
 

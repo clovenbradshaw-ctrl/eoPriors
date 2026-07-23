@@ -84,7 +84,7 @@ async function foldsForDoc(doc, readingAt, cellsBundle, maxSpans) {
   const n = Math.min(units.length, maxSpans);
   const probsList = [];
   for (let i = 0; i < n; i++) {
-    const reading = readingAt(doc, i);
+    const reading = readingAt(doc, i, { terrains: true });
     const fold = readingToFold(doc, i, reading);
     const m = await measureFold({ fold, cellsBundle, basisId: FOLD_BASIS_ID });
     const probs = {};

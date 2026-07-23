@@ -56,9 +56,9 @@ const timed = async (label, fn) => {
 };
 
 function summarize(holons) {
-  const byGrain = { Figure: [], Pattern: [], Ground: [] };
-  for (const h of holons) byGrain[h.grain].push(h);
-  return Object.fromEntries(Object.entries(byGrain).map(([grain, hs]) => [grain, {
+  const byTier = { Figure: [], Pattern: [], Ground: [] };
+  for (const h of holons) byTier[h.tier].push(h);
+  return Object.fromEntries(Object.entries(byTier).map(([tier, hs]) => [tier, {
     count: hs.length,
     avgGainBits: hs.length ? +(hs.reduce((s, h) => s + h.gain_bits, 0) / hs.length).toFixed(4) : 0,
     avgMemberCount: hs.length ? +(hs.reduce((s, h) => s + h.supporting_observation_ids.length, 0) / hs.length).toFixed(2) : 0,
@@ -94,7 +94,7 @@ async function main() {
     const span = Math.max(1, Math.floor((end - start) / spansPerBook));
     const contentProbsForBook = [];
     for (let i = start, count = 0; i < end && count < spansPerBook; i += span, count++) {
-      const reading = readingAt(doc, i);
+      const reading = readingAt(doc, i, { terrains: true });
       const fold = readingToFold(doc, i, reading);
       const measurement = await measureFold({ fold, cellsBundle, basisId: FOLD_BASIS_ID });
       allObservations.push({ observation_id: `${file}:${i}`, source_id: file, phasepost_measurements: measurement.phasepost_measurements });
@@ -114,8 +114,8 @@ async function main() {
 
   // (a) + (b): run real condensation on the naive (as-collected) sample —
   // once on the raw full-27 measurements, once with EVA/REC silenced.
-  const naiveResult = await timed(`naive full-27 (n=${allObservations.length})`, () => emergeHolons({ basisId: FOLD_BASIS_ID, observations: allObservations }));
-  const naiveContentResult = await timed(`naive content-only (n=${contentOnlyObservations.length})`, () => emergeHolons({ basisId: FOLD_BASIS_ID, observations: contentOnlyObservations }));
+  const naiveResult = await timed(`naive full-27 (n=${allObservations.length})`, () => emergeHolons({ basisId: FOLD_BASIS_ID, observations: allObservations, cellsBundle }));
+  const naiveContentResult = await timed(`naive content-only (n=${contentOnlyObservations.length})`, () => emergeHolons({ basisId: FOLD_BASIS_ID, observations: contentOnlyObservations, cellsBundle }));
   const naiveSummary = summarize(naiveResult.holons);
   const naiveContentSummary = summarize(naiveContentResult.holons);
 
@@ -136,8 +136,8 @@ async function main() {
 
   const typicalObs = allObservations.filter((o) => typicalFiles.has(o.source_id));
   const outlierObs = allObservations.filter((o) => outlierFiles.has(o.source_id));
-  const typicalResult = await timed(`typical-half (n=${typicalObs.length})`, () => emergeHolons({ basisId: FOLD_BASIS_ID, observations: typicalObs }));
-  const outlierResult = await timed(`outlier-half (n=${outlierObs.length})`, () => emergeHolons({ basisId: FOLD_BASIS_ID, observations: outlierObs }));
+  const typicalResult = await timed(`typical-half (n=${typicalObs.length})`, () => emergeHolons({ basisId: FOLD_BASIS_ID, observations: typicalObs, cellsBundle }));
+  const outlierResult = await timed(`outlier-half (n=${outlierObs.length})`, () => emergeHolons({ basisId: FOLD_BASIS_ID, observations: outlierObs, cellsBundle }));
 
   console.log(JSON.stringify({
     totalBooks: files.length,

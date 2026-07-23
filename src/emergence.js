@@ -4,6 +4,23 @@
 // the previous projection's holon registry (for identity continuity) — no
 // side effects, no I/O, so src/replay.js can call it deterministically.
 //
+// NAMING: a holon's `tier` (Figure/Pattern/Ground below) is a CONDENSATION
+// LEVEL — how far this holon collapsed from raw observations, per SPEC.md §6.
+// It is NOT the phasepost cube's Ground/Figure/Pattern GRAIN axis
+// (data/phasepost-cells.json, schemas/representation.schema.json's
+// `grainKey`) — two independently-real concepts that happen to share three
+// words, previously also sharing the property name `grain` on a holon
+// object, which reads as a claim that a Pattern-TIER holon's own evidence
+// sits at Pattern-GRAIN. It never does: a holon's `prototype` is the mean of
+// its members' phasepost_measurements, which (today) only ever carry
+// Figure/Ground-grain amplitude — see representation.schema.json's own
+// grainKey doc comment, which already reserves Pattern-grain for "the
+// projector's own Figure→Pattern condensation" as future work, not something
+// this module does yet. Renamed the property to `tier` so the two axes can
+// no longer be confused by name alone; the words Figure/Pattern/Ground stay,
+// because SPEC.md's own vocabulary for condensation levels legitimately uses
+// them ("Figures condense... Patterns condense... Ground holons condense").
+//
 // ── The gain formula, made concrete ─────────────────────────────────────────
 // SPEC.md §6: gain(H) = Σ DL(E_i) − [DL(H) + Σ DL(E_i | H)]
 //
@@ -59,6 +76,38 @@ export function bhattacharyyaCoefficient(p, q) {
   let sum = 0;
   for (const cell of Object.keys(p)) sum += Math.sqrt(Math.max(0, p[cell]) * Math.max(0, q[cell] ?? 0));
   return Math.min(1, Math.max(0, sum));
+}
+
+// Regrain a prototype into a target CUBE grain: move each cell's mass to the
+// same-OPERATOR cell at that grain (INS_Making_Entity[Figure] ->
+// INS_Composing_Kind[Pattern]). The operator is preserved; the grain shifts,
+// carrying the site with it. This is the honest way a Pattern-TIER holon (a
+// Figure recurrence condensed across independent sources, surviving holdout —
+// exactly what representation.schema.json's grainKey reserves Pattern-grain
+// for) comes to express real evidence AT Pattern-grain, instead of a
+// Pattern-tier holon's prototype silently staying in Figure-grain cells
+// forever, which is what this module did before. Ground-tier holons regrain
+// to Ground the same way. Pure: cube geometry comes in as `cellsBundle`
+// (data/phasepost-cells.json), so this module keeps its no-I/O contract and
+// the (op,grain)->cell mapping never drifts from that file. Applied to the
+// OUTPUT prototype only, after condenseByGain's gain math has already run in
+// Figure space — regraining the MEMBERS instead would make Figure-grain
+// vectors disjoint from a regrained prototype and collapse every gain to
+// zero. NOTE: `targetGrain` here and `def.grain` inside are the cube's own
+// Ground/Figure/Pattern GRAIN axis (data/phasepost-cells.json), unrelated to
+// a holon's `tier` field on the candidate object this function's callers
+// build — see the file header's tier-vs-grain disambiguation.
+export function regrainPrototype(prototype, targetGrain, cellsBundle) {
+  const index = {};
+  for (const [cellKey, def] of Object.entries(cellsBundle.cells)) index[`${def.op}:${def.grain}`] = cellKey;
+  const out = Object.fromEntries(Object.keys(prototype).map((c) => [c, 0]));
+  for (const [cell, p] of Object.entries(prototype)) {
+    if (!(p > 0)) continue;
+    const def = cellsBundle.cells[cell];
+    const target = (def && index[`${def.op}:${targetGrain}`]) || cell;
+    out[target] = (out[target] || 0) + p;
+  }
+  return out;
 }
 
 // Elementwise mean of a set of probability vectors, renormalized to sum to 1.
@@ -140,7 +189,7 @@ export function condenseFigures(observations, policy = {}) {
   const { condensed, residual } = condenseByGain(items, { mintOverheadBits: policy.mintOverheadBits });
   const figures = condensed.map((c) => {
     const { gain_bits, prototype } = compressionGainBits(c.probabilityVectors, { mintOverheadBits: policy.mintOverheadBits });
-    return { grain: 'Figure', supporting_observation_ids: c.memberIds, source_ids: [...c.sourceIds], prototype, gain_bits };
+    return { tier: 'Figure', supporting_observation_ids: c.memberIds, source_ids: [...c.sourceIds], prototype, gain_bits };
   });
   const residualObservations = residual.map((c) => ({ id: c.memberIds[0], sourceId: [...c.sourceIds][0], probabilities: c.probabilityVectors[0] }));
   return { figures, residualObservations };
@@ -167,7 +216,7 @@ function survivesSourceHoldout(memberProbabilityVectors, memberSourceLists, mint
   return true;
 }
 
-export function promoteFigurePatterns(figures, policy = {}) {
+export function promoteFigurePatterns(figures, policy = {}, cellsBundle = null) {
   const items = figures.map((f, i) => ({
     id: `figure:${i}`,
     sourceId: f.source_ids[0],
@@ -190,7 +239,12 @@ export function promoteFigurePatterns(figures, policy = {}) {
 
     const { gain_bits, prototype } = compressionGainBits(cluster.probabilityVectors, { mintOverheadBits: policy.mintOverheadBits });
     const supporting_observation_ids = memberIdxs.flatMap((idx) => figures[idx].supporting_observation_ids);
-    patterns.push({ grain: 'Pattern', supporting_observation_ids, source_ids: [...distinctSources], prototype, gain_bits });
+    // A Pattern-tier holon is the recurring version of its member Figures —
+    // express it in the cube's Pattern GRAIN (op preserved, Figure->Pattern),
+    // per representation.schema.json's own grainKey reservation. Omit
+    // cellsBundle to keep the pre-regrain prototype (backward compatible).
+    const patternPrototype = cellsBundle ? regrainPrototype(prototype, 'Pattern', cellsBundle) : prototype;
+    patterns.push({ tier: 'Pattern', supporting_observation_ids, source_ids: [...distinctSources], prototype: patternPrototype, gain_bits });
     memberIdxs.forEach((idx) => promotedFigureIdx.add(idx));
   }
 
@@ -211,13 +265,13 @@ export function promoteFigurePatterns(figures, policy = {}) {
 // Crucially, this must NOT reuse Figure-tier's mint overhead: condenseFigures
 // already ran the identical greedy-gain-merge over this exact pool (residuals
 // ARE its leftovers), so anything that clears the same bar would already have
-// merged there. Ground has to be a genuinely CHEAPER holon to mint — which is
-// exactly the cube's own reading of the grain (Ground is the ambient
-// condition, ridden not committed; Figure is the specific committed thing,
-// docs/cube.md) — for this tier to ever find anything at all.
+// merged there. Ground has to be a genuinely CHEAPER holon to mint — which
+// rhymes with (but is not derived from) the cube's own reading of Ground-
+// GRAIN (the ambient condition, ridden not committed, vs. Figure the specific
+// committed thing, docs/cube.md) — for this tier to ever find anything at all.
 const GROUND_OVERHEAD_FRACTION = 0.5;
 
-export function condenseGround(residualObservations, policy = {}) {
+export function condenseGround(residualObservations, policy = {}, cellsBundle = null) {
   const figureOverhead = policy.mintOverheadBits ?? DEFAULT_MINT_OVERHEAD_BITS;
   const groundOverhead = figureOverhead * GROUND_OVERHEAD_FRACTION;
   const items = residualObservations.map((r) => ({ id: r.id, sourceId: r.sourceId, probabilities: r.probabilities }));
@@ -226,7 +280,11 @@ export function condenseGround(residualObservations, policy = {}) {
     .filter((c) => c.sourceIds.size >= 2)
     .map((c) => {
       const { gain_bits, prototype } = compressionGainBits(c.probabilityVectors, { mintOverheadBits: groundOverhead });
-      return { grain: 'Ground', supporting_observation_ids: c.memberIds, source_ids: [...c.sourceIds], prototype, gain_bits };
+      // A Ground-tier holon is the ambient residual ridden across sources —
+      // express it in the cube's Ground GRAIN the same way (op preserved,
+      // Figure->Ground). Omit cellsBundle to keep pre-regrain behavior.
+      const groundPrototype = cellsBundle ? regrainPrototype(prototype, 'Ground', cellsBundle) : prototype;
+      return { tier: 'Ground', supporting_observation_ids: c.memberIds, source_ids: [...c.sourceIds], prototype: groundPrototype, gain_bits };
     });
 }
 
@@ -245,14 +303,14 @@ function jaccard(a, b) {
 }
 
 export async function assignHolonIdentity(candidate, previousHolons, { threshold = DEFAULT_IDENTITY_THRESHOLD } = {}) {
-  const sameGrain = previousHolons.filter((h) => h.grain === candidate.grain);
+  const sameTier = previousHolons.filter((h) => h.tier === candidate.tier);
   let best = null;
-  for (const prev of sameGrain) {
+  for (const prev of sameTier) {
     const overlap = jaccard(candidate.supporting_observation_ids, prev.supporting_observation_ids);
     if (!best || overlap > best.overlap) best = { overlap, prev };
   }
   const mintedId = await contentRef('holon', canonicalize({
-    grain: candidate.grain,
+    tier: candidate.tier,
     prototype: candidate.prototype,
     supporting_observation_ids: [...candidate.supporting_observation_ids].sort(),
   }));
@@ -262,7 +320,7 @@ export async function assignHolonIdentity(candidate, previousHolons, { threshold
   if (best && best.overlap > 0) {
     return {
       holon_id: mintedId,
-      rebound: { previous_holon_id: best.prev.holon_id, candidate_holon_id: mintedId, overlap: best.overlap, grain: candidate.grain },
+      rebound: { previous_holon_id: best.prev.holon_id, candidate_holon_id: mintedId, overlap: best.overlap, tier: candidate.tier },
     };
   }
   return { holon_id: mintedId, rebound: null };
@@ -270,12 +328,17 @@ export async function assignHolonIdentity(candidate, previousHolons, { threshold
 
 // ── Top-level orchestration ─────────────────────────────────────────────
 // observations: [{ observation_id, source_id, phasepost_measurements }]
-// previousHolons: [{ holon_id, grain, supporting_observation_ids }] from the
+// previousHolons: [{ holon_id, tier, supporting_observation_ids }] from the
 // prior projection snapshot, or [] on a first build.
-export async function emergeHolons({ basisId, observations, previousHolons = [], policy = {} }) {
+// cellsBundle: optional cube geometry (data/phasepost-cells.json). When
+// provided, Pattern-tier and Ground-tier holons regrain their prototypes into
+// the cube's matching GRAIN (regrainPrototype); when omitted, prototypes stay
+// in whatever grain their member observations used — backward compatible,
+// the behavior every existing test/caller before this relied on.
+export async function emergeHolons({ basisId, observations, previousHolons = [], policy = {}, cellsBundle = null }) {
   const { figures, residualObservations } = condenseFigures(observations, policy);
-  const { patterns, remainingFigures } = promoteFigurePatterns(figures, policy);
-  const grounds = condenseGround(residualObservations, policy);
+  const { patterns, remainingFigures } = promoteFigurePatterns(figures, policy, cellsBundle);
+  const grounds = condenseGround(residualObservations, policy, cellsBundle);
 
   const holons = [];
   const identityReboundAudits = [];

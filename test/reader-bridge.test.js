@@ -56,7 +56,7 @@ test('a held span with prior mass but no surprises fires NUL + REC + EVA, not a 
   assert.equal(fold.held, true);
 });
 
-test('a span with INS+SEG surprises and a real SYN merge on the log fires all five at once', () => {
+test('a span with INS+SEG surprises and a real SYN merge on the log fires all five Figure acts, plus a Ground SYN', () => {
   const doc = docWithLog([{ op: 'SYN', kind: 'merge', from: 'x', to: 'y', sentIdx: 3 }]);
   const reading = baseReading({
     surprises: [{ op: 'INS', text: 'Bob enters', idx: 3 }, { op: 'SEG', text: 'focus shifts off Alice', idx: 3 }],
@@ -64,9 +64,38 @@ test('a span with INS+SEG surprises and a real SYN merge on the log fires all fi
   });
   const fold = readingToFold(doc, 3, reading);
   const ops = fold.operator_events.map((e) => e.op).sort();
-  assert.deepEqual(ops, ['EVA', 'INS', 'REC', 'SEG', 'SYN']);
+  assert.deepEqual(ops, ['EVA', 'INS', 'REC', 'SEG', 'SYN', 'SYN']);
+  assert.equal(fold.operator_events.filter((e) => e.op === 'SYN' && e.grain === 'Figure').length, 1);
+  assert.equal(fold.operator_events.filter((e) => e.op === 'SYN' && e.grain === 'Ground').length, 1);
   const total = fold.operator_events.reduce((s, e) => s + e.weight_ppm, 0);
   assert.equal(total, 1_000_000);
+});
+
+test('a real SYN merge restructures the Field at Ground grain too, not only Figure', () => {
+  const doc = docWithLog([{ op: 'SYN', kind: 'merge', from: 'x', to: 'y', sentIdx: 3 }]);
+  const reading = baseReading();
+  const fold = readingToFold(doc, 3, reading);
+  const groundSyn = fold.operator_events.find((e) => e.op === 'SYN' && e.grain === 'Ground');
+  assert.ok(groundSyn, 'a real SYN merge on the log produces a Ground-grain event too');
+  assert.equal(groundSyn.source, 'ground:syn-merge');
+});
+
+test('with no SYN on the log, no Ground SYN event is fabricated', () => {
+  const doc = docWithLog([]);
+  const reading = baseReading();
+  const fold = readingToFold(doc, 3, reading);
+  assert.ok(!fold.operator_events.some((e) => e.op === 'SYN'));
+});
+
+test('multiple real SYN merges in one span each produce their own Figure AND Ground event', () => {
+  const doc = docWithLog([
+    { op: 'SYN', kind: 'merge', from: 'x', to: 'y', sentIdx: 3 },
+    { op: 'SYN', kind: 'alias', from: 'p', to: 'q', sentIdx: 3 },
+  ]);
+  const reading = baseReading();
+  const fold = readingToFold(doc, 3, reading);
+  assert.equal(fold.operator_events.filter((e) => e.op === 'SYN' && e.grain === 'Figure').length, 2);
+  assert.equal(fold.operator_events.filter((e) => e.op === 'SYN' && e.grain === 'Ground').length, 2);
 });
 
 test('REC fires from predicted bonds alone, even with zero predicted figures', () => {
@@ -76,8 +105,8 @@ test('REC fires from predicted bonds alone, even with zero predicted figures', (
   assert.ok(fold.operator_events.some((e) => e.op === 'REC'));
 });
 
-test('without reading ground channels, legacy operator_events remain Figure-grain only', () => {
-  const doc = docWithLog([{ op: 'SYN', kind: 'merge', from: 'x', to: 'y', sentIdx: 3 }]);
+test('without reading.ground set and no real SYN on the log, operator_events remain Figure-grain only', () => {
+  const doc = docWithLog([]);
   const reading = baseReading({
     surprises: [{ op: 'DEF', text: 'age: 40', idx: 3 }],
     held: true,
@@ -99,48 +128,105 @@ test('surprisal_bits and bayes_bits scale to integer micro-bits and reader_versi
   assert.ok(Number.isInteger(fold.bayes_bits));
 });
 
-// reading.ground's REAL shape, matching eoreader4.2's actual src/perceiver/reading.js output
-// (locked in by its own tests/smoke.test.js): nested { novelty: {mass}, bonds: {mass},
-// propositions: {mass} }, not the flat {novelty_ppm, field_ppm, atmosphere_ppm} this test used
-// to assert — that flat shape was never what eoreader4.2 produced, so this test was passing
-// against a fiction while groundEventsFor silently no-opped on every real reading (see the
-// comment above groundEventsFor). Regression-fixed: these fixtures now mirror the real shape.
-test('reading ground channels (real eoreader4.2 shape) cast prior evidence onto Ground-grain cells', () => {
+// reading.ground's REAL shape when read with { terrains: true } (eoreader4.2's actual
+// src/perceiver/reading.js output): { void, field, atmosphere } x { cultivating, clearing,
+// tending } — nine real numbers, not the old { novelty: {mass}, bonds: {mass}, propositions:
+// {mass} } three-channel shape (that shape is gone entirely now — reading.js's Ground row grew
+// from 3 cells to the full 3x3, see reading.js's own opts.terrains comment). (site, stance) ->
+// operator is fixed by the cube geometry: void->{INS,NUL,SIG}, field->{SYN,SEG,CON},
+// atmosphere->{REC,DEF,EVA} for {cultivating,clearing,tending} respectively.
+test('reading ground channels (full 3x3 terrains shape) light all nine Ground cells', () => {
   const doc = docWithLog([]);
   const reading = baseReading({
-    ground: { novelty: { mass: 1 }, bonds: { mass: 3 }, propositions: { mass: 6 } },
+    ground: {
+      void:       { cultivating: 10, clearing: 1, tending: 2 },
+      field:      { cultivating: 5,  clearing: 1, tending: 2 },
+      atmosphere: { cultivating: 3,  clearing: 1, tending: 1 },
+    },
   });
   const fold = readingToFold(doc, 3, reading);
   const ground = fold.operator_events.filter((e) => e.grain === 'Ground');
-  assert.equal(ground.length, 3, 'all three Ground channels have nonzero mass, so all three fire');
-  const novelty = ground.find((e) => e.op === 'INS' && e.source === 'ground:novelty');
-  const field = ground.find((e) => e.op === 'CON' && e.source === 'ground:field');
-  const atmosphere = ground.find((e) => e.op === 'REC' && e.source === 'ground:atmosphere');
-  assert.ok(novelty && field && atmosphere);
-  // relative shares mirror the 1:3:6 input mass ratio, regardless of what else is in the fold
-  // (EVA always fires too — see readingToFold — but scales every event by the same factor).
-  assert.ok(field.weight_ppm > novelty.weight_ppm, 'field (mass 3) outweighs novelty (mass 1)');
-  assert.ok(atmosphere.weight_ppm > field.weight_ppm, 'atmosphere (mass 6) outweighs field (mass 3)');
+  assert.equal(ground.length, 9, 'every (site, stance) cell has nonzero mass, so all nine fire');
+  const opsSet = new Set(ground.map((e) => e.op));
+  assert.deepEqual(opsSet, new Set(['INS', 'NUL', 'SIG', 'SYN', 'SEG', 'CON', 'REC', 'DEF', 'EVA']));
   const total = fold.operator_events.reduce((s, e) => s + e.weight_ppm, 0);
   assert.equal(total, 1_000_000);
 });
 
-test('reading ground channels: a channel with zero mass does not fire, others still do', () => {
+test('reading ground channels: per-stance normalization keeps a near-constant clearing reserve alive beside a much larger cultivating mass', () => {
   const doc = docWithLog([]);
   const reading = baseReading({
-    ground: { novelty: { mass: 1 }, bonds: { mass: 0 }, propositions: { mass: 4 } },
+    ground: {
+      // cultivating masses are ~100x clearing/tending — pooling raw magnitudes would
+      // swamp clearing/tending to near-zero weight; per-stance normalization must not.
+      void:       { cultivating: 1000, clearing: 1, tending: 0 },
+      field:      { cultivating: 800,  clearing: 1, tending: 3 },
+      atmosphere: { cultivating: 600,  clearing: 1, tending: 2 },
+    },
   });
   const fold = readingToFold(doc, 3, reading);
   const ground = fold.operator_events.filter((e) => e.grain === 'Ground');
-  assert.equal(ground.length, 2, 'the zero-mass bond channel is omitted, not emitted as a zero-weight event');
-  assert.ok(!ground.some((e) => e.source === 'ground:field'));
+  const cultivatingTotal = ground.filter((e) => ['INS', 'SYN', 'REC'].includes(e.op)).reduce((s, e) => s + e.weight_ppm, 0);
+  const clearingTotal = ground.filter((e) => ['NUL', 'SEG', 'DEF'].includes(e.op)).reduce((s, e) => s + e.weight_ppm, 0);
+  assert.ok(clearingTotal > 0, 'the clearing reserve survives despite being ~100x smaller in raw magnitude');
+  assert.ok(cultivatingTotal / clearingTotal < 3, 'per-stance normalization keeps the two stances roughly comparable, not 100x apart');
 });
 
-test('reading ground channels: all-zero ground mass admits no Ground events at all', () => {
+test('reading ground channels: a site with zero mass in an otherwise-active stance is omitted, not a zero-weight event', () => {
   const doc = docWithLog([]);
   const reading = baseReading({
-    ground: { novelty: { mass: 0 }, bonds: { mass: 0 }, propositions: { mass: 0 } },
+    ground: {
+      void:       { cultivating: 5, clearing: 1, tending: 0 }, // tending=0: void has no active front this span
+      field:      { cultivating: 5, clearing: 1, tending: 2 },
+      atmosphere: { cultivating: 5, clearing: 1, tending: 1 },
+    },
+  });
+  const fold = readingToFold(doc, 3, reading);
+  const ground = fold.operator_events.filter((e) => e.grain === 'Ground');
+  assert.equal(ground.length, 8, 'eight of nine cells fire; void.tending is the one omitted zero');
+  assert.ok(!ground.some((e) => e.op === 'SIG'), 'SIG is void.tending — omitted, not emitted at zero weight');
+});
+
+test('reading ground channels: an entirely inactive stance (all three sites zero) contributes no events for it', () => {
+  const doc = docWithLog([]);
+  const reading = baseReading({
+    ground: {
+      void:       { cultivating: 5, clearing: 0, tending: 1 },
+      field:      { cultivating: 5, clearing: 0, tending: 1 },
+      atmosphere: { cultivating: 5, clearing: 0, tending: 1 },
+    },
+  });
+  const fold = readingToFold(doc, 3, reading);
+  const ground = fold.operator_events.filter((e) => e.grain === 'Ground');
+  assert.equal(ground.length, 6, 'clearing is entirely zero across all three sites — NUL/SEG/DEF never fire');
+  assert.ok(!['NUL', 'SEG', 'DEF'].some((op) => ground.some((e) => e.op === op)));
+});
+
+test('reading ground channels: all-zero ground admits no Ground events at all', () => {
+  const doc = docWithLog([]);
+  const reading = baseReading({
+    ground: {
+      void:       { cultivating: 0, clearing: 0, tending: 0 },
+      field:      { cultivating: 0, clearing: 0, tending: 0 },
+      atmosphere: { cultivating: 0, clearing: 0, tending: 0 },
+    },
   });
   const fold = readingToFold(doc, 3, reading);
   assert.ok(fold.operator_events.every((e) => e.grain !== 'Ground'));
+});
+
+test('reading ground channels: SYN_Cultivating_Field sums the systematic field.cultivating share AND a real merge event, not just one', () => {
+  const doc = docWithLog([{ op: 'SYN', kind: 'merge', from: 'x', to: 'y', sentIdx: 3 }]);
+  const reading = baseReading({
+    ground: {
+      void:       { cultivating: 5, clearing: 1, tending: 1 },
+      field:      { cultivating: 5, clearing: 1, tending: 1 },
+      atmosphere: { cultivating: 5, clearing: 1, tending: 1 },
+    },
+  });
+  const fold = readingToFold(doc, 3, reading);
+  const synGround = fold.operator_events.filter((e) => e.op === 'SYN' && e.grain === 'Ground');
+  assert.equal(synGround.length, 2, 'one from the systematic field.cultivating share, one from the real merge event');
+  assert.ok(synGround.some((e) => e.source === 'ground:field.cultivating'));
+  assert.ok(synGround.some((e) => e.source === 'ground:syn-merge'));
 });

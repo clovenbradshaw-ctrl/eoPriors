@@ -91,7 +91,7 @@ async function main() {
     const span = Math.max(1, Math.floor((end - start) / spansPerBook));
     const probsForBook = [];
     for (let i = start, count = 0; i < end && count < spansPerBook; i += span, count++) {
-      const reading = readingAt(doc, i);
+      const reading = readingAt(doc, i, { terrains: true });
       const fold = readingToFold(doc, i, reading);
       const measurement = await measureFold({ fold, cellsBundle, basisId: FOLD_BASIS_ID });
       const probs = {};

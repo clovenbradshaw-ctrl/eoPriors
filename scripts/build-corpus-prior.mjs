@@ -87,7 +87,7 @@ async function main() {
     const end = Math.min(units.length, start + maxSentences);
     let bookSpans = 0;
     for (let i = start; i < end; i++) {
-      const reading = readingAt(doc, i);
+      const reading = readingAt(doc, i, { terrains: true });
       const fold = readingToFold(doc, i, reading);
       const measurement = await measureFold({ fold, cellsBundle, basisId: FOLD_BASIS_ID });
       const probs = {};
