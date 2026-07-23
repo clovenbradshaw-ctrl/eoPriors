@@ -59,7 +59,7 @@ async function main() {
     const opCount = {};
     let spans = 0, held = 0, surprisalSum = 0;
     for (let i = start; i < end; i++) {
-      const reading = readingAt(doc, i);
+      const reading = readingAt(doc, i, { terrains: true });
       const fold = readingToFold(doc, i, reading);
       const measurement = await measureFold({ fold, cellsBundle, basisId: FOLD_BASIS_ID });
       spans++;

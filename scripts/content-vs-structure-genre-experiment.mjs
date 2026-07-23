@@ -168,7 +168,7 @@ async function main() {
     const foldProbsForBook = [];
     const contentProbsForBook = [];
     for (let i = start, count = 0; i < end && count < spansPerBook; i += span, count++) {
-      const reading = readingAt(doc, i);
+      const reading = readingAt(doc, i, { terrains: true });
       const fold = readingToFold(doc, i, reading);
       const foldMeasurement = await measureFold({ fold, cellsBundle, basisId: FOLD_BASIS_ID });
       const foldProbs = {};
