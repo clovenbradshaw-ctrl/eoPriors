@@ -171,14 +171,23 @@ export function synEventsAt(doc, at) {
   return events.filter((e) => e.op === 'SYN' && e.sentIdx === at);
 }
 
-// The three Ground terrains, one per EO domain, are the three "Cultivating"
-// Ground cells — cultivating is exactly the stance of MAINTAINING a standing
-// prior, which is what each channel is. reading.js's opt-in `ground` block
-// (opts.terrains) exposes the amplitudes; these map them to the cube:
-//   void       (priorMass, Existence)      -> INS_Cultivating_Void
-//   field      (priorBond, Structure)      -> SYN_Cultivating_Field
-//   atmosphere (priorProp, Interpretation) -> REC_Cultivating_Atmosphere
-const GROUND_TERRAIN_OPS = { void: 'INS', field: 'SYN', atmosphere: 'REC' };
+// The full Ground row of the cube: three SITES (one per EO domain) × three
+// STANCES, each a real aspect of the standing prior that reading.js's opt-in
+// `ground` block (opts.terrains) exposes. The (site, stance) -> operator map
+// is fixed by the cube geometry (data/phasepost-cells.json): each site's
+// three Ground cells ARE its Clearing/Tending/Cultivating operators.
+//   void       Existence      clearing=NUL  tending=SIG  cultivating=INS
+//   field      Structure      clearing=SEG  tending=CON  cultivating=SYN
+//   atmosphere Interpretation clearing=DEF  tending=EVA  cultivating=REC
+// Cultivating reads the accumulated γ-mass; Clearing the reserve held for the
+// unseen (novelty); Tending the active front the span re-touches now.
+const GROUND_OPS = {
+  void:       { cultivating: 'INS', clearing: 'NUL', tending: 'SIG' },
+  field:      { cultivating: 'SYN', clearing: 'SEG', tending: 'CON' },
+  atmosphere: { cultivating: 'REC', clearing: 'DEF', tending: 'EVA' },
+};
+const GROUND_STANCES = ['cultivating', 'clearing', 'tending'];
+const GROUND_SITES = ['void', 'field', 'atmosphere'];
 
 export function readingToFold(doc, at, reading) {
   // Each entry is { op, grain, units }; units are normalized to weight_ppm at
@@ -198,19 +207,25 @@ export function readingToFold(doc, at, reading) {
   // THE TERRAINS (Ground grain). Present only when reading was produced with
   // { terrains: true }; absent otherwise, keeping the pre-terrains fold
   // byte-identical. The standing prior enters as ONE collective unit (the
-  // ambient facet the span is read AGAINST, per the schema's Ground grain),
-  // its internal split across the three terrains reflecting the actual
-  // priorMass/priorBond/priorProp composition. A span with no standing prior
-  // yet (the opening) gets no Ground events — correct, there is no prior to
-  // ride. Raw channel amplitudes are on the reader's own scales (γ-mass vs
-  // bond count); using them directly is honest to how the reader represents
-  // the prior, not a claim they share a unit.
+  // ambient facet the span is read AGAINST, per the schema's Ground grain).
+  // That unit is split EQUALLY across the active stances (cultivating /
+  // clearing / tending), and within each stance across the three sites by
+  // that stance's own amplitudes. Splitting per-stance first is deliberate:
+  // the three stances are on different scales (accumulated γ-mass grows large,
+  // the novelty reserve sits near 1, the active-front is a small count), so
+  // pooling their raw magnitudes would let cultivating swamp the other two and
+  // leave six Ground cells effectively dark again. Per-stance normalization
+  // keeps all three genuinely represented. A span with no standing prior yet
+  // (the opening) gets no Ground events — correct, there is nothing to ride.
   const g = reading.ground;
-  if (g) {
-    const total = (g.void || 0) + (g.field || 0) + (g.atmosphere || 0);
-    if (total > 0) {
-      for (const [channel, op] of Object.entries(GROUND_TERRAIN_OPS)) {
-        if ((g[channel] || 0) > 0) events.push({ op, grain: 'Ground', units: (g[channel] / total) });
+  if (g && g.void && typeof g.void === 'object') {
+    const activeStances = GROUND_STANCES.filter((st) => GROUND_SITES.reduce((s, site) => s + (g[site]?.[st] || 0), 0) > 0);
+    const stanceUnit = activeStances.length ? 1 / activeStances.length : 0;
+    for (const stance of activeStances) {
+      const stanceTotal = GROUND_SITES.reduce((s, site) => s + (g[site]?.[stance] || 0), 0);
+      for (const site of GROUND_SITES) {
+        const amp = g[site]?.[stance] || 0;
+        if (amp > 0) events.push({ op: GROUND_OPS[site][stance], grain: 'Ground', units: stanceUnit * (amp / stanceTotal) });
       }
     }
   }

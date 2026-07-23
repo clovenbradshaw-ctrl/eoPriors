@@ -108,26 +108,67 @@ test('without a ground field (reading not produced with terrains) the fold has N
   assert.equal(total, 1_000_000);
 });
 
-test('a ground field emits the three Cultivating terrain cells at Ground grain, split by channel amplitude', () => {
+const fullGround = (overrides = {}) => ({
+  void: { cultivating: 3, clearing: 1, tending: 1 },
+  field: { cultivating: 2, clearing: 1, tending: 1 },
+  atmosphere: { cultivating: 6, clearing: 1, tending: 1 },
+  ...overrides,
+});
+
+test('a full 3x3 ground field lights all nine Ground cells across sites and stances', () => {
   const doc = docWithLog([]);
-  const reading = baseReading({
-    held: true,
-    predicted: { op: 'REC', figures: ['x'], bonds: [] },
-    ground: { void: 3, field: 1, atmosphere: 6 }, // total 10
-  });
+  const reading = baseReading({ held: true, predicted: { op: 'REC', figures: ['x'], bonds: [] }, ground: fullGround() });
   const fold = readingToFold(doc, 3, reading);
-  const ground = fold.operator_events.filter((e) => e.grain === 'Ground');
-  assert.deepEqual(ground.map((e) => e.op).sort(), ['INS', 'REC', 'SYN']); // Void/Atmosphere/Field ops
-  // atmosphere (6/10) should weigh more than void (3/10) more than field (1/10)
-  const byOp = Object.fromEntries(ground.map((e) => [e.op, e.weight_ppm]));
-  assert.ok(byOp.REC > byOp.INS && byOp.INS > byOp.SYN, `expected REC>INS>SYN, got ${JSON.stringify(byOp)}`);
+  const groundCells = fold.operator_events.filter((e) => e.grain === 'Ground').map((e) => e.op).sort();
+  // all nine Ground operators: NUL/SEG/DEF (clearing), SIG/CON/EVA (tending), INS/SYN/REC (cultivating)
+  assert.deepEqual(groundCells, ['CON', 'DEF', 'EVA', 'INS', 'NUL', 'REC', 'SEG', 'SIG', 'SYN']);
   const total = fold.operator_events.reduce((s, e) => s + e.weight_ppm, 0);
   assert.equal(total, 1_000_000);
 });
 
-test('the opening span (no standing prior yet, ground all zero) emits no Ground events — nothing to read against', () => {
+test('within a stance, Ground cells split by site amplitude (cultivating: atmosphere>void>field)', () => {
   const doc = docWithLog([]);
-  const reading = baseReading({ surprises: [{ op: 'INS', text: 'x enters', idx: 0 }], ground: { void: 0, field: 0, atmosphere: 0 } });
+  const reading = baseReading({ held: true, ground: fullGround() });
+  const fold = readingToFold(doc, 3, reading);
+  const byOp = Object.fromEntries(fold.operator_events.filter((e) => e.grain === 'Ground').map((e) => [e.op, e.weight_ppm]));
+  // cultivating: REC(atmosphere 6) > INS(void 3) > SYN(field 2)
+  assert.ok(byOp.REC > byOp.INS && byOp.INS > byOp.SYN, `expected REC>INS>SYN, got ${JSON.stringify(byOp)}`);
+});
+
+test('per-stance normalization keeps the near-constant clearing reserve from being swamped by the large cultivating mass', () => {
+  const doc = docWithLog([]);
+  // cultivating is on a far larger scale (100) than clearing (1); without
+  // per-stance splitting the clearing cells would round to nothing.
+  const reading = baseReading({ held: true, ground: {
+    void: { cultivating: 100, clearing: 1, tending: 0 },
+    field: { cultivating: 80, clearing: 1, tending: 0 },
+    atmosphere: { cultivating: 120, clearing: 1, tending: 0 },
+  } });
+  const fold = readingToFold(doc, 3, reading);
+  const clearing = fold.operator_events.filter((e) => e.grain === 'Ground' && ['NUL', 'SEG', 'DEF'].includes(e.op));
+  assert.equal(clearing.length, 3);
+  assert.ok(clearing.every((e) => e.weight_ppm > 0), 'clearing reserve cells must survive, not be swamped');
+});
+
+test('a stance that is entirely zero (no active front) contributes no Tending cells', () => {
+  const doc = docWithLog([]);
+  const reading = baseReading({ held: true, ground: {
+    void: { cultivating: 3, clearing: 1, tending: 0 },
+    field: { cultivating: 2, clearing: 1, tending: 0 },
+    atmosphere: { cultivating: 6, clearing: 1, tending: 0 },
+  } });
+  const fold = readingToFold(doc, 3, reading);
+  const tending = fold.operator_events.filter((e) => e.grain === 'Ground' && ['SIG', 'CON', 'EVA'].includes(e.op));
+  assert.equal(tending.length, 0);
+});
+
+test('the opening span (no standing prior, all stances zero) emits no Ground events — nothing to read against', () => {
+  const doc = docWithLog([]);
+  const reading = baseReading({ surprises: [{ op: 'INS', text: 'x enters', idx: 0 }], ground: {
+    void: { cultivating: 0, clearing: 0, tending: 0 },
+    field: { cultivating: 0, clearing: 0, tending: 0 },
+    atmosphere: { cultivating: 0, clearing: 0, tending: 0 },
+  } });
   const fold = readingToFold(doc, 0, reading);
   assert.ok(fold.operator_events.every((e) => e.grain !== 'Ground'));
 });
@@ -136,11 +177,9 @@ test('Ground INS_Cultivating_Void is a DIFFERENT cell from Figure INS_Making_Ent
   const doc = docWithLog([]);
   const reading = baseReading({
     surprises: [{ op: 'INS', text: 'newthing enters', idx: 3 }], // Figure INS
-    ground: { void: 5, field: 0, atmosphere: 0 },                 // Ground INS (Void terrain)
+    ground: { void: { cultivating: 5, clearing: 0, tending: 0 }, field: { cultivating: 0, clearing: 0, tending: 0 }, atmosphere: { cultivating: 0, clearing: 0, tending: 0 } },
   });
   const fold = readingToFold(doc, 3, reading);
-  const figureINS = fold.operator_events.find((e) => e.op === 'INS' && e.grain === 'Figure');
-  const groundINS = fold.operator_events.find((e) => e.op === 'INS' && e.grain === 'Ground');
-  assert.ok(figureINS, 'expected a Figure INS');
-  assert.ok(groundINS, 'expected a Ground INS');
+  assert.ok(fold.operator_events.find((e) => e.op === 'INS' && e.grain === 'Figure'), 'expected a Figure INS');
+  assert.ok(fold.operator_events.find((e) => e.op === 'INS' && e.grain === 'Ground'), 'expected a Ground INS');
 });
