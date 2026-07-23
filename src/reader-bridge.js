@@ -171,27 +171,58 @@ export function synEventsAt(doc, at) {
   return events.filter((e) => e.op === 'SYN' && e.sentIdx === at);
 }
 
-export function readingToFold(doc, at, reading) {
-  const contentEvents = (reading.surprises || []).map((s) => ({ op: s.op, grain: 'Figure' }));
-  for (const _syn of synEventsAt(doc, at)) contentEvents.push({ op: 'SYN', grain: 'Figure' });
+// The three Ground terrains, one per EO domain, are the three "Cultivating"
+// Ground cells — cultivating is exactly the stance of MAINTAINING a standing
+// prior, which is what each channel is. reading.js's opt-in `ground` block
+// (opts.terrains) exposes the amplitudes; these map them to the cube:
+//   void       (priorMass, Existence)      -> INS_Cultivating_Void
+//   field      (priorBond, Structure)      -> SYN_Cultivating_Field
+//   atmosphere (priorProp, Interpretation) -> REC_Cultivating_Atmosphere
+const GROUND_TERRAIN_OPS = { void: 'INS', field: 'SYN', atmosphere: 'REC' };
 
-  const events = [...contentEvents];
-  if (reading.held && contentEvents.length === 0) events.push({ op: 'NUL', grain: 'Figure' });
+export function readingToFold(doc, at, reading) {
+  // Each entry is { op, grain, units }; units are normalized to weight_ppm at
+  // the end. A Figure surprise, a held NUL, REC, and EVA each weigh one unit.
+  const events = [];
+  for (const s of (reading.surprises || [])) events.push({ op: s.op, grain: 'Figure', units: 1 });
+  for (const _syn of synEventsAt(doc, at)) events.push({ op: 'SYN', grain: 'Figure', units: 1 });
+  const hadContent = events.length > 0;
+  if (reading.held && !hadContent) events.push({ op: 'NUL', grain: 'Figure', units: 1 });
 
   const predicted = reading.predicted;
-  if (predicted && (predicted.figures?.length || predicted.bonds?.length)) {
-    events.push({ op: 'REC', grain: 'Figure' });
-  }
-  // reading.evaluation is unconditionally present (reading.js:305) — the
-  // reading evaluates every line, held or not.
-  events.push({ op: 'EVA', grain: 'Figure' });
+  if (predicted && (predicted.figures?.length || predicted.bonds?.length)) events.push({ op: 'REC', grain: 'Figure', units: 1 });
+  // reading.evaluation is unconditionally present (reading.js) — the reading
+  // evaluates every line, held or not.
+  events.push({ op: 'EVA', grain: 'Figure', units: 1 });
 
-  const weightEach = Math.floor(1_000_000 / events.length);
-  const operator_events = events.map((e, i) => ({
-    ...e,
-    // last event absorbs rounding so the split still sums to exactly 1e6
-    weight_ppm: i === events.length - 1 ? 1_000_000 - weightEach * (events.length - 1) : weightEach,
-  }));
+  // THE TERRAINS (Ground grain). Present only when reading was produced with
+  // { terrains: true }; absent otherwise, keeping the pre-terrains fold
+  // byte-identical. The standing prior enters as ONE collective unit (the
+  // ambient facet the span is read AGAINST, per the schema's Ground grain),
+  // its internal split across the three terrains reflecting the actual
+  // priorMass/priorBond/priorProp composition. A span with no standing prior
+  // yet (the opening) gets no Ground events — correct, there is no prior to
+  // ride. Raw channel amplitudes are on the reader's own scales (γ-mass vs
+  // bond count); using them directly is honest to how the reader represents
+  // the prior, not a claim they share a unit.
+  const g = reading.ground;
+  if (g) {
+    const total = (g.void || 0) + (g.field || 0) + (g.atmosphere || 0);
+    if (total > 0) {
+      for (const [channel, op] of Object.entries(GROUND_TERRAIN_OPS)) {
+        if ((g[channel] || 0) > 0) events.push({ op, grain: 'Ground', units: (g[channel] / total) });
+      }
+    }
+  }
+
+  const totalUnits = events.reduce((s, e) => s + e.units, 0);
+  let allocated = 0;
+  const operator_events = events.map((e, i) => {
+    const isLast = i === events.length - 1;
+    const weight_ppm = isLast ? 1_000_000 - allocated : Math.round((e.units / totalUnits) * 1_000_000);
+    if (!isLast) allocated += weight_ppm;
+    return { op: e.op, grain: e.grain, weight_ppm };
+  });
 
   return {
     reader_version: READER_VERSION,

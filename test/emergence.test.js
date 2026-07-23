@@ -153,3 +153,47 @@ test('emergeHolons end-to-end: figures, a promoted pattern, and identity continu
   assert.deepEqual(firstIds, secondIds, 'identical rebuild must be a no-op on holon identity');
   assert.equal(second.identityReboundAudits.length, 0);
 });
+
+// --- Pattern/Ground grain regraining (the tier -> cube-grain collapse) ---
+import { regrainPrototype } from '../src/emergence.js';
+import { loadPhasepostCells } from '../src/fold.js';
+
+test('regrainPrototype moves each cell mass to the same-operator cell at the target grain', async () => {
+  const bundle = await loadPhasepostCells();
+  // A Figure-grain prototype: all mass on INS_Making_Entity (INS/Figure/Entity).
+  const proto = Object.fromEntries(Object.keys(bundle.cells).map((c) => [c, 0]));
+  proto.INS_Making_Entity = 0.7;
+  proto.CON_Binding_Link = 0.3;
+  const pattern = regrainPrototype(proto, 'Pattern', bundle);
+  // INS Figure -> INS Pattern (INS_Composing_Kind); CON Figure -> CON Pattern (CON_Tracing_Network)
+  assert.ok(Math.abs(pattern.INS_Composing_Kind - 0.7) < 1e-9);
+  assert.ok(Math.abs(pattern.CON_Tracing_Network - 0.3) < 1e-9);
+  assert.equal(pattern.INS_Making_Entity, 0); // vacated the Figure cell
+  const sum = Object.values(pattern).reduce((s, p) => s + p, 0);
+  assert.ok(Math.abs(sum - 1) < 1e-9); // mass conserved
+});
+
+test('regrainPrototype to Ground sends operators to their Cultivating/Tending/Clearing Ground cells', async () => {
+  const bundle = await loadPhasepostCells();
+  const proto = Object.fromEntries(Object.keys(bundle.cells).map((c) => [c, 0]));
+  proto.INS_Making_Entity = 1;
+  const ground = regrainPrototype(proto, 'Ground', bundle);
+  assert.ok(Math.abs(ground.INS_Cultivating_Void - 1) < 1e-9); // INS Ground = Void terrain
+});
+
+test('emergeHolons with cellsBundle expresses Pattern-tier holons in Pattern-grain cube cells, not Figure cells', async () => {
+  const bundle = await loadPhasepostCells();
+  // Two sources both producing INS_Making_Entity-heavy observations -> a
+  // cross-source recurrence that should promote to a Pattern holon.
+  const insHeavy = (id, src) => ({
+    observation_id: id, source_id: src,
+    phasepost_measurements: Object.fromEntries(Object.keys(bundle.cells).map((c) => [c, { amplitude_ppm: c === 'INS_Making_Entity' ? 900000 : Math.round(100000 / 26) }])),
+  });
+  const observations = [insHeavy('o1', 'srcA'), insHeavy('o2', 'srcB'), insHeavy('o3', 'srcA'), insHeavy('o4', 'srcB')];
+  const { holons } = await emergeHolons({ basisId: 'exemplar-basis:sha256:' + '0'.repeat(64), observations, cellsBundle: bundle });
+  const patternHolons = holons.filter((h) => h.grain === 'Pattern');
+  if (patternHolons.length) {
+    const top = Object.entries(patternHolons[0].prototype).sort((a, b) => b[1] - a[1])[0][0];
+    assert.equal(top, 'INS_Composing_Kind', 'Pattern holon should express in the Pattern-grain cube cell, not INS_Making_Entity');
+  }
+});

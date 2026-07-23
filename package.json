@@ -21,6 +21,7 @@
     "probe:cross-modal": "node scripts/cross-modal-probe.mjs",
     "probe:music-fold": "node scripts/music-fold-probe.mjs",
     "probe:dna-fold": "node scripts/dna-fold-probe.mjs",
+    "probe:grain-coverage": "node scripts/grain-coverage-probe.mjs",
     "experiment:native-metaphor": "node scripts/native-metaphor-experiment.mjs"
   },
   "engines": {

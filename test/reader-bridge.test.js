@@ -98,3 +98,49 @@ test('surprisal_bits and bayes_bits scale to integer micro-bits and reader_versi
   assert.ok(Number.isInteger(fold.surprisal_bits));
   assert.ok(Number.isInteger(fold.bayes_bits));
 });
+
+test('without a ground field (reading not produced with terrains) the fold has NO Ground-grain events — parity with pre-terrains behavior', () => {
+  const doc = docWithLog([]);
+  const reading = baseReading({ surprises: [{ op: 'INS', text: 'x enters', idx: 3 }], predicted: { op: 'REC', figures: ['x'], bonds: [] } });
+  const fold = readingToFold(doc, 3, reading);
+  assert.ok(fold.operator_events.every((e) => e.grain !== 'Ground'));
+  const total = fold.operator_events.reduce((s, e) => s + e.weight_ppm, 0);
+  assert.equal(total, 1_000_000);
+});
+
+test('a ground field emits the three Cultivating terrain cells at Ground grain, split by channel amplitude', () => {
+  const doc = docWithLog([]);
+  const reading = baseReading({
+    held: true,
+    predicted: { op: 'REC', figures: ['x'], bonds: [] },
+    ground: { void: 3, field: 1, atmosphere: 6 }, // total 10
+  });
+  const fold = readingToFold(doc, 3, reading);
+  const ground = fold.operator_events.filter((e) => e.grain === 'Ground');
+  assert.deepEqual(ground.map((e) => e.op).sort(), ['INS', 'REC', 'SYN']); // Void/Atmosphere/Field ops
+  // atmosphere (6/10) should weigh more than void (3/10) more than field (1/10)
+  const byOp = Object.fromEntries(ground.map((e) => [e.op, e.weight_ppm]));
+  assert.ok(byOp.REC > byOp.INS && byOp.INS > byOp.SYN, `expected REC>INS>SYN, got ${JSON.stringify(byOp)}`);
+  const total = fold.operator_events.reduce((s, e) => s + e.weight_ppm, 0);
+  assert.equal(total, 1_000_000);
+});
+
+test('the opening span (no standing prior yet, ground all zero) emits no Ground events — nothing to read against', () => {
+  const doc = docWithLog([]);
+  const reading = baseReading({ surprises: [{ op: 'INS', text: 'x enters', idx: 0 }], ground: { void: 0, field: 0, atmosphere: 0 } });
+  const fold = readingToFold(doc, 0, reading);
+  assert.ok(fold.operator_events.every((e) => e.grain !== 'Ground'));
+});
+
+test('Ground INS_Cultivating_Void is a DIFFERENT cell from Figure INS_Making_Entity — the grain separates prior from commitment', () => {
+  const doc = docWithLog([]);
+  const reading = baseReading({
+    surprises: [{ op: 'INS', text: 'newthing enters', idx: 3 }], // Figure INS
+    ground: { void: 5, field: 0, atmosphere: 0 },                 // Ground INS (Void terrain)
+  });
+  const fold = readingToFold(doc, 3, reading);
+  const figureINS = fold.operator_events.find((e) => e.op === 'INS' && e.grain === 'Figure');
+  const groundINS = fold.operator_events.find((e) => e.op === 'INS' && e.grain === 'Ground');
+  assert.ok(figureINS, 'expected a Figure INS');
+  assert.ok(groundINS, 'expected a Ground INS');
+});
