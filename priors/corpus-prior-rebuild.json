@@ -1,0 +1,307 @@
+{
+  "corpus_prior_version": "corpus-prior@1.0.0",
+  "generated_from": {
+    "corpus_dir_basename": "corpus_consolidated",
+    "books": 66,
+    "spans": 13024,
+    "max_sentences_per_book": 200,
+    "per_book": [
+      {
+        "file": "diverse_corpus__book_de_kafka.txt",
+        "spans": 200
+      },
+      {
+        "file": "diverse_corpus__book_es_quijote.txt",
+        "spans": 200
+      },
+      {
+        "file": "diverse_corpus__book_fi_kalevala.txt",
+        "spans": 200
+      },
+      {
+        "file": "diverse_corpus__book_fr_verne.txt",
+        "spans": 200
+      },
+      {
+        "file": "gutenberg_corpus__pg13434.txt",
+        "spans": 200
+      },
+      {
+        "file": "gutenberg_corpus__pg1396.txt",
+        "spans": 200
+      },
+      {
+        "file": "gutenberg_corpus__pg18986.txt",
+        "spans": 200
+      },
+      {
+        "file": "gutenberg_corpus__pg19273.txt",
+        "spans": 200
+      },
+      {
+        "file": "gutenberg_corpus__pg21575.txt",
+        "spans": 200
+      },
+      {
+        "file": "gutenberg_corpus__pg22153.txt",
+        "spans": 200
+      },
+      {
+        "file": "gutenberg_corpus__pg32322.txt",
+        "spans": 200
+      },
+      {
+        "file": "gutenberg_corpus__pg41286.txt",
+        "spans": 200
+      },
+      {
+        "file": "gutenberg_corpus__pg50903.txt",
+        "spans": 200
+      },
+      {
+        "file": "gutenberg_corpus__pg70623.txt",
+        "spans": 200
+      },
+      {
+        "file": "gutenberg_corpus__pg70656.txt",
+        "spans": 200
+      },
+      {
+        "file": "gutenberg_corpus__pg74409.txt",
+        "spans": 200
+      },
+      {
+        "file": "gutenberg_corpus__pg857.txt",
+        "spans": 200
+      },
+      {
+        "file": "journalism_corpus__baker_following_color_line.txt",
+        "spans": 200
+      },
+      {
+        "file": "journalism_corpus__bly_ten_days_madhouse.txt",
+        "spans": 200
+      },
+      {
+        "file": "journalism_corpus__reed_ten_days_shook_world.txt",
+        "spans": 200
+      },
+      {
+        "file": "journalism_corpus__riis_how_other_half_lives.txt",
+        "spans": 200
+      },
+      {
+        "file": "journalism_corpus__sinclair_the_jungle.txt",
+        "spans": 200
+      },
+      {
+        "file": "journalism_corpus__steffens_shame_of_cities.txt",
+        "spans": 200
+      },
+      {
+        "file": "journalism_corpus__tarbell_standard_oil.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__a-midsummer-nights-dream_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__alls-well-that-ends-well_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__antony-and-cleopatra_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__as-you-like-it_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__coriolanus_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__cymbeline_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__hamlet_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__henry-iv-part-1_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__henry-iv-part-2_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__henry-v_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__henry-vi-part-1_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__henry-vi-part-2_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__henry-vi-part-3_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__henry-viii_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__julius-caesar_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__king-john_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__king-lear_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__loves-labors-lost_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__lucrece_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__macbeth_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__measure-for-measure_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__much-ado-about-nothing_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__othello_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__pericles_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__richard-ii_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__richard-iii_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__romeo-and-juliet_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__shakespeares-sonnets_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__the-comedy-of-errors_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__the-merchant-of-venice_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__the-merry-wives-of-windsor_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__the-phoenix-and-turtle_TXT_FolgerShakespeare.txt",
+        "spans": 24
+      },
+      {
+        "file": "shakespeare_corpus__folger__the-taming-of-the-shrew_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__the-tempest_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__the-two-gentlemen-of-verona_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__the-two-noble-kinsmen_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__the-winters-tale_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__timon-of-athens_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__titus-andronicus_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__troilus-and-cressida_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__twelfth-night_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__venus-and-adonis_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      }
+    ]
+  },
+  "reader_version": "eoreader4.2@1.0.0",
+  "fold_basis_id": "exemplar-basis:sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "measurement_protocol": "eo-compression@1.0.0",
+  "distribution_ppm": {
+    "NUL_Clearing_Void": 1,
+    "NUL_Dissecting_Entity": 26617,
+    "NUL_Unraveling_Kind": 1,
+    "SEG_Clearing_Field": 1,
+    "SEG_Dissecting_Link": 56489,
+    "SEG_Unraveling_Network": 1,
+    "DEF_Clearing_Atmosphere": 1,
+    "DEF_Dissecting_Lens": 18606,
+    "DEF_Unraveling_Paradigm": 1,
+    "SIG_Tending_Void": 1,
+    "SIG_Binding_Entity": 2763,
+    "SIG_Tracing_Kind": 1,
+    "CON_Tending_Field": 1,
+    "CON_Binding_Link": 112935,
+    "CON_Tracing_Network": 1,
+    "EVA_Tending_Atmosphere": 1,
+    "EVA_Binding_Lens": 360529,
+    "EVA_Tracing_Paradigm": 1,
+    "INS_Cultivating_Void": 1,
+    "INS_Making_Entity": 57172,
+    "INS_Composing_Kind": 1,
+    "SYN_Cultivating_Field": 1,
+    "SYN_Making_Link": 4342,
+    "SYN_Composing_Network": 1,
+    "REC_Cultivating_Atmosphere": 1,
+    "REC_Making_Lens": 360529,
+    "REC_Composing_Paradigm": 1
+  }
+}
