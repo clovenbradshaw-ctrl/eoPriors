@@ -31,26 +31,9 @@
 //     different modality (source code), already scoped for
 //     scripts/cross-modal-probe.mjs, not this prose-fold-prior corpus.
 //
-// Three specific Gutenberg ids are also excluded (EXCLUDED_GUTENBERG_IDS
-// below), found by a keyword audit of gutenberg-corpus.py's stratified
-// sample (which selects by subject bucket, blind to authorship stance, so
-// this wasn't ruled out at fetch time): each is a Western outsider's
-// civilizational-superiority framing of a real living people, not incidental
-// period vocabulary in unrelated prose (contrast: pg15359, Du Bois's "The
-// Negro," also matches "savage"/"barbarism" on a keyword search but uses
-// those words in ordinary historical-scholarly register about antiquity,
-// self-authored by a Black scholar — same words, not the same pattern; kept).
-//   - pg12565 (Collins & King, "An Account of the English Colony in New
-//     South Wales," 1798): "the untutored savage, emerging from darkness and
-//     barbarism," "the residence of savages" — a British penal-colony
-//     administrator's account of Aboriginal Australians and Māori.
-//   - pg34675 (Wright, "Adventures Among the Red Indians"): "the mind of the
-//     savage, crushed by the sight of the white man's superior skill, and
-//     wealth, and wisdom" — of Native Americans and the Bolivian Aymara.
-//   - pg24995 (Becke, "The Americans in the South Seas"): a real Native
-//     Hawaiian person described in-narrative as "a Sandwich Island savage."
-// This is a spot-audit of one stratified sample, not a systematic scan —
-// other Gutenberg ids pulled by a future run of gutenberg-corpus.py aren't
+// EXCLUDED_GUTENBERG_IDS below are three ids dropped after a content audit
+// of this stratified sample (docs/corpus-sources.md §16). Not a systematic
+// scan — other ids pulled by a future run of gutenberg-corpus.py aren't
 // covered by this list and would need the same check.
 //
 // Usage:
