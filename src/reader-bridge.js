@@ -38,11 +38,20 @@
 //                      array on every span, so the fallback would otherwise
 //                      never fire again.
 //
-// Figure operator_events come from per-span content. Ground operator_events are
-// admitted only when reading.js exposes its own three prior channels: Void
-// (novelty reserve), Field (standing bonds), and Atmosphere (standing
-// propositions). Pattern remains emergence.js's condensation layer; the bridge
-// still does not fabricate Pattern cells from a single reader pass.
+// Figure operator_events come from per-span content. Ground operator_events come
+// from two independent sources: reading.js's own three prior channels (Void
+// novelty reserve, Field standing bonds, Atmosphere standing propositions —
+// groundEventsFor), and a real SYN merge/alias on the log, which restructures
+// the Field itself, not just a Figure-grain link (readingToFold, ~15/3379 spans
+// on a full Frankenstein read — rare and real, not fabricated). A NUL-birth
+// Ground signal was considered and rejected: eoreader4.2's parse pipeline logs
+// a `kind:'span'` NUL on literally every sentence (the 1:1 retention hold, see
+// pipeline.js:363), so treating log-NUL as a "re-grounding" event would inject
+// constant noise into every span, not sparse structural signal — the opposite
+// of what groundEventsFor and the SYN addition above are for. Pattern remains
+// emergence.js's condensation layer (a holon *tier*, not a phasepost *grain* —
+// see emergence.js's own header); the bridge still does not fabricate
+// Pattern-grain cells from a single reader pass.
 //
 // Equal weight per event: reading.js gives no per-event confidence to split
 // by, so equal-split is the neutral first-cut policy, not a tuned one.
@@ -209,9 +218,23 @@ function groundEventsFor(reading) {
 
 export function readingToFold(doc, at, reading) {
   const contentEvents = (reading.surprises || []).map((s) => ({ op: s.op, grain: 'Figure' }));
-  for (const _syn of synEventsAt(doc, at)) contentEvents.push({ op: 'SYN', grain: 'Figure' });
+  const synHere = synEventsAt(doc, at);
+  for (const _syn of synHere) contentEvents.push({ op: 'SYN', grain: 'Figure' });
 
-  const events = [...contentEvents, ...groundEventsFor(reading)];
+  // A real SYN merge/alias doesn't only add a Figure-grain link — it restructures the
+  // Field ITSELF (Structure x Ground): the set of nodes the Field prior operates over
+  // just changed, not merely one more bond between existing ones. reading.js's own
+  // priorBond only ever accumulates CON/SIG (reading.js:132-133), so this Ground-level
+  // consequence of a real merge is otherwise invisible to the Ground channel entirely —
+  // added here once per real SYN event on the log, exactly like its Figure-grain sibling
+  // above, never fabricated when synHere is empty. Checked against a complete
+  // Frankenstein read before wiring this: 15/3379 spans (0.44%) carry a real merge/alias
+  // SYN with a genuine sentIdx — rare and structurally real, not manufactured to fill a
+  // cell (unlike an earlier NUL-birth idea for this same slot, which turned out to fire
+  // on literally every span — see reader-bridge.test.js's sibling comment).
+  const groundSynEvents = synHere.map(() => ({ op: 'SYN', grain: 'Ground', source: 'ground:syn-merge' }));
+
+  const events = [...contentEvents, ...groundEventsFor(reading), ...groundSynEvents];
   if (reading.held && contentEvents.length === 0) events.push({ op: 'NUL', grain: 'Figure' });
 
   const predicted = reading.predicted;

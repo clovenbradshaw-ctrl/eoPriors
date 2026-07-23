@@ -56,7 +56,7 @@ test('a held span with prior mass but no surprises fires NUL + REC + EVA, not a 
   assert.equal(fold.held, true);
 });
 
-test('a span with INS+SEG surprises and a real SYN merge on the log fires all five at once', () => {
+test('a span with INS+SEG surprises and a real SYN merge on the log fires all five Figure acts, plus a Ground SYN', () => {
   const doc = docWithLog([{ op: 'SYN', kind: 'merge', from: 'x', to: 'y', sentIdx: 3 }]);
   const reading = baseReading({
     surprises: [{ op: 'INS', text: 'Bob enters', idx: 3 }, { op: 'SEG', text: 'focus shifts off Alice', idx: 3 }],
@@ -64,9 +64,38 @@ test('a span with INS+SEG surprises and a real SYN merge on the log fires all fi
   });
   const fold = readingToFold(doc, 3, reading);
   const ops = fold.operator_events.map((e) => e.op).sort();
-  assert.deepEqual(ops, ['EVA', 'INS', 'REC', 'SEG', 'SYN']);
+  assert.deepEqual(ops, ['EVA', 'INS', 'REC', 'SEG', 'SYN', 'SYN']);
+  assert.equal(fold.operator_events.filter((e) => e.op === 'SYN' && e.grain === 'Figure').length, 1);
+  assert.equal(fold.operator_events.filter((e) => e.op === 'SYN' && e.grain === 'Ground').length, 1);
   const total = fold.operator_events.reduce((s, e) => s + e.weight_ppm, 0);
   assert.equal(total, 1_000_000);
+});
+
+test('a real SYN merge restructures the Field at Ground grain too, not only Figure', () => {
+  const doc = docWithLog([{ op: 'SYN', kind: 'merge', from: 'x', to: 'y', sentIdx: 3 }]);
+  const reading = baseReading();
+  const fold = readingToFold(doc, 3, reading);
+  const groundSyn = fold.operator_events.find((e) => e.op === 'SYN' && e.grain === 'Ground');
+  assert.ok(groundSyn, 'a real SYN merge on the log produces a Ground-grain event too');
+  assert.equal(groundSyn.source, 'ground:syn-merge');
+});
+
+test('with no SYN on the log, no Ground SYN event is fabricated', () => {
+  const doc = docWithLog([]);
+  const reading = baseReading();
+  const fold = readingToFold(doc, 3, reading);
+  assert.ok(!fold.operator_events.some((e) => e.op === 'SYN'));
+});
+
+test('multiple real SYN merges in one span each produce their own Figure AND Ground event', () => {
+  const doc = docWithLog([
+    { op: 'SYN', kind: 'merge', from: 'x', to: 'y', sentIdx: 3 },
+    { op: 'SYN', kind: 'alias', from: 'p', to: 'q', sentIdx: 3 },
+  ]);
+  const reading = baseReading();
+  const fold = readingToFold(doc, 3, reading);
+  assert.equal(fold.operator_events.filter((e) => e.op === 'SYN' && e.grain === 'Figure').length, 2);
+  assert.equal(fold.operator_events.filter((e) => e.op === 'SYN' && e.grain === 'Ground').length, 2);
 });
 
 test('REC fires from predicted bonds alone, even with zero predicted figures', () => {
@@ -76,8 +105,8 @@ test('REC fires from predicted bonds alone, even with zero predicted figures', (
   assert.ok(fold.operator_events.some((e) => e.op === 'REC'));
 });
 
-test('without reading ground channels, legacy operator_events remain Figure-grain only', () => {
-  const doc = docWithLog([{ op: 'SYN', kind: 'merge', from: 'x', to: 'y', sentIdx: 3 }]);
+test('without reading.ground set and no real SYN on the log, operator_events remain Figure-grain only', () => {
+  const doc = docWithLog([]);
   const reading = baseReading({
     surprises: [{ op: 'DEF', text: 'age: 40', idx: 3 }],
     held: true,
