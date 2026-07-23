@@ -76,7 +76,7 @@ test('REC fires from predicted bonds alone, even with zero predicted figures', (
   assert.ok(fold.operator_events.some((e) => e.op === 'REC'));
 });
 
-test('every operator_event lands at Figure grain — representation.schema.json reserves Ground/Pattern for other processes', () => {
+test('without reading ground channels, legacy operator_events remain Figure-grain only', () => {
   const doc = docWithLog([{ op: 'SYN', kind: 'merge', from: 'x', to: 'y', sentIdx: 3 }]);
   const reading = baseReading({
     surprises: [{ op: 'DEF', text: 'age: 40', idx: 3 }],
@@ -97,4 +97,17 @@ test('surprisal_bits and bayes_bits scale to integer micro-bits and reader_versi
   assert.equal(fold.lens_id, 'entity@γ0.90');
   assert.ok(Number.isInteger(fold.surprisal_bits));
   assert.ok(Number.isInteger(fold.bayes_bits));
+});
+
+test('reading ground channels cast real prior evidence onto Ground-grain cells', () => {
+  const doc = docWithLog([]);
+  const reading = baseReading({
+    ground: { novelty_ppm: 100_000, field_ppm: 300_000, atmosphere_ppm: 600_000 },
+  });
+  const fold = readingToFold(doc, 3, reading);
+  assert.ok(fold.operator_events.some((e) => e.op === 'INS' && e.grain === 'Ground' && e.source === 'ground:novelty'));
+  assert.ok(fold.operator_events.some((e) => e.op === 'CON' && e.grain === 'Ground' && e.source === 'ground:field'));
+  assert.ok(fold.operator_events.some((e) => e.op === 'REC' && e.grain === 'Ground' && e.source === 'ground:atmosphere'));
+  const total = fold.operator_events.reduce((s, e) => s + e.weight_ppm, 0);
+  assert.equal(total, 1_000_000);
 });

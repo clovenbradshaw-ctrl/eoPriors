@@ -313,6 +313,18 @@ export const readingAt = (doc, cursor, opts = {}) => {
     bayes,
     bayesBits: round(bayesBits),
     bayesBy,                       // per-figure KL contributions — the per-dimension strain (vector)
+    // The three Ground channels that built the prior for this read. These are
+    // terrain evidence, not span-site content: Void/NOVELTY (cold-start reserve),
+    // Field/priorBond (standing connectivity), and Atmosphere/priorProp
+    // (standing proposition belief). Downstream folds can cast them onto the
+    // cube's Ground grain without inventing embeddings or fabricating Figure
+    // events. Values are ppm-scaled amplitudes so the bridge can mix them with
+    // per-span operator evidence deterministically.
+    ground: {
+      novelty_ppm: Math.round(Math.max(0, Math.min(1, pNovel)) * 1e6),
+      field_ppm: Math.round(Math.max(0, Math.min(1, priorBond.size / Math.max(1, priorBond.size + 1))) * 1e6),
+      atmosphere_ppm: Math.round(Math.max(0, Math.min(1, [...priorProp.values()].reduce((a, b) => a + b, 0) / Math.max(1, [...priorProp.values()].reduce((a, b) => a + b, 0) + propReserve))) * 1e6),
+    },
     held,
     summary,
     // Tagged conversational warmth folded into the prior this turn (0 when the

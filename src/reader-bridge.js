@@ -38,13 +38,11 @@
 //                      array on every span, so the fallback would otherwise
 //                      never fire again.
 //
-// Every operator_events entry is Figure grain. representation.schema.json's
-// own grainKey doc comment is explicit that Ground and Pattern are NOT a
-// single reader pass's to claim — Ground is an ambient/prior condition
-// (the exemplar-basis machinery's job), Pattern is emergence.js's own
-// Figure→Pattern condensation. A per-span bridge that fabricated Ground or
-// Pattern evidence to light up more of the cube would be exactly the
-// cosine-in-a-costume move this seam exists to avoid.
+// Figure operator_events come from per-span content. Ground operator_events are
+// admitted only when reading.js exposes its own three prior channels: Void
+// (novelty reserve), Field (standing bonds), and Atmosphere (standing
+// propositions). Pattern remains emergence.js's condensation layer; the bridge
+// still does not fabricate Pattern cells from a single reader pass.
 //
 // Equal weight per event: reading.js gives no per-event confidence to split
 // by, so equal-split is the neutral first-cut policy, not a tuned one.
@@ -171,11 +169,25 @@ export function synEventsAt(doc, at) {
   return events.filter((e) => e.op === 'SYN' && e.sentIdx === at);
 }
 
+function groundEventsFor(reading) {
+  const g = reading.ground || reading.groundPrior || reading.priorTerrains;
+  if (!g || typeof g !== 'object') return [];
+  const ppm = (v) => Math.max(0, Math.min(1_000_000, Math.round(Number(v) || 0)));
+  const events = [];
+  const novelty = ppm(g.novelty_ppm ?? g.void_ppm ?? g.novelty);
+  const field = ppm(g.field_ppm ?? g.priorBond_ppm ?? g.field);
+  const atmosphere = ppm(g.atmosphere_ppm ?? g.priorProp_ppm ?? g.atmosphere);
+  if (novelty > 0) events.push({ op: 'INS', grain: 'Ground', weight_hint_ppm: novelty, source: 'ground:novelty' });
+  if (field > 0) events.push({ op: 'CON', grain: 'Ground', weight_hint_ppm: field, source: 'ground:field' });
+  if (atmosphere > 0) events.push({ op: 'REC', grain: 'Ground', weight_hint_ppm: atmosphere, source: 'ground:atmosphere' });
+  return events;
+}
+
 export function readingToFold(doc, at, reading) {
   const contentEvents = (reading.surprises || []).map((s) => ({ op: s.op, grain: 'Figure' }));
   for (const _syn of synEventsAt(doc, at)) contentEvents.push({ op: 'SYN', grain: 'Figure' });
 
-  const events = [...contentEvents];
+  const events = [...contentEvents, ...groundEventsFor(reading)];
   if (reading.held && contentEvents.length === 0) events.push({ op: 'NUL', grain: 'Figure' });
 
   const predicted = reading.predicted;
@@ -186,12 +198,19 @@ export function readingToFold(doc, at, reading) {
   // reading evaluates every line, held or not.
   events.push({ op: 'EVA', grain: 'Figure' });
 
-  const weightEach = Math.floor(1_000_000 / events.length);
-  const operator_events = events.map((e, i) => ({
-    ...e,
-    // last event absorbs rounding so the split still sums to exactly 1e6
-    weight_ppm: i === events.length - 1 ? 1_000_000 - weightEach * (events.length - 1) : weightEach,
-  }));
+  const hinted = events.some((e) => Number.isInteger(e.weight_hint_ppm));
+  const eventHint = (e) => Number.isInteger(e.weight_hint_ppm) ? e.weight_hint_ppm : 1_000_000;
+  const totalHint = hinted ? events.reduce((s, e) => s + eventHint(e), 0) : 0;
+  let allocated = 0;
+  const weightEach = events.length ? Math.floor(1_000_000 / events.length) : 0;
+  const operator_events = events.map((e, i) => {
+    const { weight_hint_ppm, ...event } = e;
+    const weight_ppm = hinted && totalHint > 0
+      ? (i === events.length - 1 ? 1_000_000 - allocated : Math.round((eventHint(e) / totalHint) * 1_000_000))
+      : (i === events.length - 1 ? 1_000_000 - weightEach * (events.length - 1) : weightEach);
+    allocated += i === events.length - 1 ? 0 : weight_ppm;
+    return { ...event, weight_ppm };
+  });
 
   return {
     reader_version: READER_VERSION,
