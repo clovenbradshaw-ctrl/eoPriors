@@ -1,9 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  bhattacharyyaCoefficient, meanPrototype, compressionGainBits,
+  bhattacharyyaCoefficient, meanPrototype, compressionGainBits, regrainPrototype,
   condenseFigures, promoteFigurePatterns, condenseGround, assignHolonIdentity, emergeHolons,
 } from '../src/emergence.js';
+import { loadPhasepostCells } from '../src/fold.js';
 
 // 12 toy cells, not 27 — small enough to reason about by hand, but enough
 // that two distributions peaked on genuinely different cells don't share
@@ -153,3 +154,106 @@ test('emergeHolons end-to-end: figures, a promoted pattern, and identity continu
   assert.deepEqual(firstIds, secondIds, 'identical rebuild must be a no-op on holon identity');
   assert.equal(second.identityReboundAudits.length, 0);
 });
+
+// ── regrainPrototype: real cube geometry, not the 12-toy-cell space above —
+// this operates on real (op,grain) cell keys from data/phasepost-cells.json,
+// which the toy space doesn't have.
+test('regrainPrototype: moves each cell\'s mass to the same-operator cell at the target grain', async () => {
+  const cellsBundle = await loadPhasepostCells();
+  // A Figure-grain prototype peaked on INS_Making_Entity and CON_Binding_Link.
+  const prototype = Object.fromEntries(Object.keys(cellsBundle.cells).map((c) => [c, 0]));
+  prototype.INS_Making_Entity = 0.7;
+  prototype.CON_Binding_Link = 0.3;
+
+  const regrained = regrainPrototype(prototype, 'Pattern', cellsBundle);
+  assert.equal(regrained.INS_Composing_Kind, 0.7, 'INS at Figure -> INS at Pattern (same operator, same site row)');
+  assert.equal(regrained.CON_Tracing_Network, 0.3, 'CON at Figure -> CON at Pattern');
+  assert.equal(regrained.INS_Making_Entity, 0, 'no mass left behind at the source grain');
+  assert.equal(regrained.CON_Binding_Link, 0);
+  const total = Object.values(regrained).reduce((a, b) => a + b, 0);
+  assert.ok(Math.abs(total - 1) < 1e-9, 'total mass is conserved across regraining');
+});
+
+test('regrainPrototype: regrains to Ground the same way, by operator', async () => {
+  const cellsBundle = await loadPhasepostCells();
+  const prototype = Object.fromEntries(Object.keys(cellsBundle.cells).map((c) => [c, 0]));
+  prototype.REC_Making_Lens = 1;
+  const regrained = regrainPrototype(prototype, 'Ground', cellsBundle);
+  assert.equal(regrained.REC_Cultivating_Atmosphere, 1);
+});
+
+test('regrainPrototype: an empty/all-zero prototype regrains to all-zero, not NaN', async () => {
+  const cellsBundle = await loadPhasepostCells();
+  const prototype = Object.fromEntries(Object.keys(cellsBundle.cells).map((c) => [c, 0]));
+  const regrained = regrainPrototype(prototype, 'Pattern', cellsBundle);
+  assert.ok(Object.values(regrained).every((v) => v === 0));
+});
+
+// Real-cube-geometry counterpart to the toy-space "two independently-sourced,
+// near-identical figures merge into one Pattern" test above — same shape,
+// but checking what cellsBundle threading actually does to the promoted
+// Pattern's prototype cells.
+const realFigureDist = (cellsBundle, peakCell, peakMass) => {
+  const cells = Object.keys(cellsBundle.cells);
+  const rest = (1 - peakMass) / (cells.length - 1);
+  return Object.fromEntries(cells.map((c) => [c, c === peakCell ? peakMass : rest]));
+};
+
+test('promoteFigurePatterns: without cellsBundle, a promoted Pattern keeps its Figure-grain prototype (backward compatible)', async () => {
+  const cellsBundle = await loadPhasepostCells();
+  const proto = realFigureDist(cellsBundle, 'INS_Making_Entity', 0.9);
+  const figures = [
+    { tier: 'Figure', supporting_observation_ids: ['o1', 'o2'], source_ids: ['s1'], prototype: proto, gain_bits: 1 },
+    { tier: 'Figure', supporting_observation_ids: ['o3', 'o4'], source_ids: ['s2'], prototype: proto, gain_bits: 1 },
+    { tier: 'Figure', supporting_observation_ids: ['o5', 'o6'], source_ids: ['s3'], prototype: proto, gain_bits: 1 },
+  ];
+  const { patterns } = promoteFigurePatterns(figures, { mintOverheadBits: 0.3 }); // no cellsBundle
+  assert.equal(patterns.length, 1);
+  // realFigureDist spreads a small "rest" share over every non-peak cell (needed for
+  // condenseByGain's entropy/gain math — see the Pattern-grain sibling test below), so
+  // INS_Composing_Kind isn't exactly 0 either; the real claim is that Figure-grain still
+  // holds the peak and Pattern-grain still holds only ambient rest, i.e. no regraining ran.
+  assert.ok(patterns[0].prototype.INS_Making_Entity > 0.5, 'stays peaked at the Figure-grain cell the members were built from');
+  assert.ok(patterns[0].prototype.INS_Composing_Kind < 0.01, 'Pattern-grain cell holds only ambient rest mass, not the regrained peak');
+});
+
+test('promoteFigurePatterns: with cellsBundle, a promoted Pattern regrains onto the matching Pattern-grain cell', async () => {
+  const cellsBundle = await loadPhasepostCells();
+  const proto = realFigureDist(cellsBundle, 'INS_Making_Entity', 0.9);
+  const figures = [
+    { tier: 'Figure', supporting_observation_ids: ['o1', 'o2'], source_ids: ['s1'], prototype: proto, gain_bits: 1 },
+    { tier: 'Figure', supporting_observation_ids: ['o3', 'o4'], source_ids: ['s2'], prototype: proto, gain_bits: 1 },
+    { tier: 'Figure', supporting_observation_ids: ['o5', 'o6'], source_ids: ['s3'], prototype: proto, gain_bits: 1 },
+  ];
+  const { patterns } = promoteFigurePatterns(figures, { mintOverheadBits: 0.3 }, cellsBundle);
+  assert.equal(patterns.length, 1);
+  assert.ok(patterns[0].prototype.INS_Composing_Kind > 0, 'regrained onto the matching Pattern-grain cell (same operator, INS)');
+  assert.equal(patterns[0].prototype.INS_Making_Entity ?? 0, 0, 'no mass left behind at Figure grain');
+  const total = Object.values(patterns[0].prototype).reduce((a, b) => a + b, 0);
+  assert.ok(Math.abs(total - 1) < 1e-9, 'regraining conserves total mass');
+});
+
+test('condenseGround: with cellsBundle, a condensed Ground holon regrains onto the matching Ground-grain cell', async () => {
+  const cellsBundle = await loadPhasepostCells();
+  const proto = realFigureDist(cellsBundle, 'DEF_Dissecting_Lens', 0.4);
+  const residuals = [
+    { id: 'r1', sourceId: 'sA', probabilities: proto },
+    { id: 'r2', sourceId: 'sB', probabilities: proto },
+  ];
+  const grounds = condenseGround(residuals, { mintOverheadBits: 0.01 }, cellsBundle);
+  assert.equal(grounds.length, 1);
+  assert.ok(grounds[0].prototype.DEF_Clearing_Atmosphere > 0, 'regrained onto the matching Ground-grain cell (same operator, DEF)');
+  assert.equal(grounds[0].prototype.DEF_Dissecting_Lens ?? 0, 0);
+});
+
+// A synthetic observations->emergeHolons->condenseGround end-to-end fixture was
+// tried and dropped: condenseByGain's merge criterion is RELATIVE (merged gain
+// vs. the cost of leaving items apart, each solo already paying the full mint
+// overhead), not an absolute "gain > 0" bar. Two items, at almost any overhead,
+// merge — confirmed empirically (delta stayed positive across bhattacharyya
+// ~0.68 and overhead up to 3). condenseFigures only leaves genuine residuals
+// out of a much larger pool where some observations find no good pairing at
+// all; that's exactly why the file's own pre-existing condenseGround tests
+// hand-build residuals directly rather than deriving them from observations.
+// The real end-to-end check for cellsBundle threading through emergeHolons is
+// scripts/emergence-on-corpus.mjs run against real corpus text (see PR).

@@ -114,8 +114,8 @@ async function main() {
 
   // (a) + (b): run real condensation on the naive (as-collected) sample —
   // once on the raw full-27 measurements, once with EVA/REC silenced.
-  const naiveResult = await timed(`naive full-27 (n=${allObservations.length})`, () => emergeHolons({ basisId: FOLD_BASIS_ID, observations: allObservations }));
-  const naiveContentResult = await timed(`naive content-only (n=${contentOnlyObservations.length})`, () => emergeHolons({ basisId: FOLD_BASIS_ID, observations: contentOnlyObservations }));
+  const naiveResult = await timed(`naive full-27 (n=${allObservations.length})`, () => emergeHolons({ basisId: FOLD_BASIS_ID, observations: allObservations, cellsBundle }));
+  const naiveContentResult = await timed(`naive content-only (n=${contentOnlyObservations.length})`, () => emergeHolons({ basisId: FOLD_BASIS_ID, observations: contentOnlyObservations, cellsBundle }));
   const naiveSummary = summarize(naiveResult.holons);
   const naiveContentSummary = summarize(naiveContentResult.holons);
 
@@ -136,8 +136,8 @@ async function main() {
 
   const typicalObs = allObservations.filter((o) => typicalFiles.has(o.source_id));
   const outlierObs = allObservations.filter((o) => outlierFiles.has(o.source_id));
-  const typicalResult = await timed(`typical-half (n=${typicalObs.length})`, () => emergeHolons({ basisId: FOLD_BASIS_ID, observations: typicalObs }));
-  const outlierResult = await timed(`outlier-half (n=${outlierObs.length})`, () => emergeHolons({ basisId: FOLD_BASIS_ID, observations: outlierObs }));
+  const typicalResult = await timed(`typical-half (n=${typicalObs.length})`, () => emergeHolons({ basisId: FOLD_BASIS_ID, observations: typicalObs, cellsBundle }));
+  const outlierResult = await timed(`outlier-half (n=${outlierObs.length})`, () => emergeHolons({ basisId: FOLD_BASIS_ID, observations: outlierObs, cellsBundle }));
 
   console.log(JSON.stringify({
     totalBooks: files.length,
