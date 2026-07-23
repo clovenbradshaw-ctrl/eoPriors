@@ -86,13 +86,113 @@ as gutenberg.org/wikipedia.org, run any HF pulls locally.
 | Met Museum Open Access | https://www.metmuseum.org/art/collection/search | API docs at `metmuseum.github.io` | CC0 |
 | Rijksmuseum | https://www.rijksmuseum.nl/en/rijksstudio | API at `data.rijksmuseum.nl` | CC0 for public-domain works in the collection |
 
-## 8. Non-Western / world music (audio)
+## 8. News / current reporting
+
+Real professional news is the one category where "royalty-free" is genuinely
+hard to find — copyright is the business model, so almost nothing here is
+comparable in volume to the Gutenberg/Wikipedia sources. What actually
+qualifies, not what merely sounds like it does:
+
+| Source | URL | Access | Status | Caveat |
+|---|---|---|---|---|
+| Voice of America | https://www.voanews.com | Site scrape / RSS feeds | Public domain (all text/audio/video produced *exclusively* by VOA) | VOA pages also embed AFP/AP/Reuters wire material, which stays fully copyrighted and isn't distinguishable without filtering by byline/source tag — don't bulk-scrape without that filter |
+| Wikinews | https://en.wikinews.org | MediaWiki API (`en.wikinews.org/w/api.php`), same pattern as Wikipedia | CC BY 2.5, original collaborative reporting | Low volume — small, volunteer-written, not a wire-service substitute |
+| EU Commission press corner | https://ec.europa.eu/commission/presscorner | Site + API | CC BY 4.0 by default (2011 Commission reuse decision) | Institutional press releases, not independent journalism — reads like government comms |
+| US federal agency press releases | whitehouse.gov, state.gov, NASA news, etc. | Site scrape | Public domain (federal works) | Same genre issue — official statements, not third-party reporting |
+| Historic newspapers | Chronicling America / Internet Archive (see §6) | API | Public domain, pre-1929ish | The only *volume* source, but it's history, not current news |
+| GDELT Project | https://www.gdeltproject.org | Open dataset | Open | Structured event/entity metadata extracted from news, **not** the article prose — useful for an entity-registry layer, not a prose corpus |
+| CC-NEWS (Common Crawl News) | https://commoncrawl.org/blog/news-dataset-available | Common Crawl bulk | Legally murky | A scrape of copyrighted publisher content used under an implicit research norm, **not** an actual license grant — a rights posture you'd be choosing deliberately, not one that's clear. Do not bucket with Gutenberg/CC-BY sources |
+
+Honest takeaway: current, professionally-reported news at real volume with
+clean rights mostly does not exist as a corpus. The closest legitimate analogs
+are government/institutional communications (VOA, EU, federal agencies), which
+read like official statements rather than journalism, or GDELT's structured
+metadata rather than prose.
+
+## 9. Source code (highly-respected repositories, diverse languages/paradigms)
+
+Code is a genuinely different modality from prose — different token
+distributions, different structure, a real test of whether the reader's
+operator vocabulary generalizes past natural language. Almost all of these are
+OSI-approved licenses (permissive or copyleft); a priors corpus is fine under
+either, but record which per `source.discovered`. Pull via
+`raw.githubusercontent.com/{owner}/{repo}/{branch}/{path}` (confirmed reachable
+from this sandbox) or the GitHub API (`api.github.com`, also reachable).
+
+| Repo | URL | Language / paradigm | License |
+|---|---|---|---|
+| torvalds/linux | https://github.com/torvalds/linux | C, systems/kernel | GPL-2.0 |
+| sqlite/sqlite (mirror) | https://github.com/sqlite/sqlite | C, extremely disciplined style | Public domain |
+| python/cpython | https://github.com/python/cpython | C + Python, language runtime | PSF |
+| rust-lang/rust | https://github.com/rust-lang/rust | Rust, systems | MIT/Apache-2.0 |
+| golang/go | https://github.com/golang/go | Go, idiomatic-by-design | BSD-3-Clause |
+| microsoft/TypeScript | https://github.com/microsoft/TypeScript | TypeScript, compiler | Apache-2.0 |
+| apache/spark | https://github.com/apache/spark | Scala/Java, big-data | Apache-2.0 |
+| pallets/flask | https://github.com/pallets/flask | Python, small idiomatic web | BSD-3-Clause |
+| ggerganov/llama.cpp | https://github.com/ggerganov/llama.cpp | C++, numeric/ML | MIT |
+| fptn? / SICP-style Scheme, e.g. racket/racket | https://github.com/racket/racket | Scheme/Racket, functional | MIT/Apache-2.0 |
+| haskell/ghc (mirror) | https://github.com/ghc/ghc | Haskell, pure functional | BSD-3-Clause |
+| postgres/postgres (mirror) | https://github.com/postgres/postgres | C, database, dense comments | PostgreSQL license |
+
+Diversity axes worth spanning deliberately: paradigm (imperative C, functional
+Haskell/Scheme, OO Java), domain (kernel, web, numeric, compiler), and
+comment-density (SQLite/Postgres are heavily prose-commented; competitive-style
+code is nearly comment-free) — the last matters because the reader's operator
+extraction leans partly on natural-language cues in comments.
+
+## 10. Audio / music (sheet music + recordings — the true cross-modal test)
+
+The strongest validation of "compression not embeddings" (SPEC.md's central
+bet): a WAV of a symphony and a Gutenberg novel flowing through the *same*
+core. Needs a modality-specific perceiver eoPriors doesn't have yet (§ the
+perceiver-contract work), so this is a build-ahead source list, not a
+plug-in-today one.
+
+| Source | URL | Content | Status |
+|---|---|---|---|
+| IMSLP / Petrucci Library | https://imslp.org | Sheet music (PDF/MusicXML) + many public-domain recordings | Public domain / CC (per-file; IMSLP marks each) — the canonical classical-scores archive |
+| Musopen | https://musopen.org | Public-domain recordings + sheet music | Public domain / CC (403 from this sandbox as of last check — pull locally) |
+| archive.org audio | https://archive.org/details/audio | Recordings, incl. Live Music Archive + 78rpm/public-domain sets | Mixed — filter by `licenseurl`; large PD/CC subset |
+| MutopiaProject | https://www.mutopiaproject.org | Sheet music as LilyPond source + MIDI/PDF | Public domain / CC — LilyPond source is itself a text modality worth its own read |
+| Wikimedia Commons (audio) | https://commons.wikimedia.org | Recordings, MIDI, some MusicXML | Mixed CC/PD per-file |
+| MAESTRO dataset | https://magenta.tensorflow.org/datasets/maestro | Paired piano audio + aligned MIDI | CC BY-NC-SA — the NC clause applies |
+
+Formats matter for the perceiver design: **MusicXML/LilyPond/MIDI are symbolic**
+(discrete events, closer to text — the easiest first non-text perceiver),
+while **WAV/FLAC are raw signal** (where the "bytes are bytes, a compression
+statistic runs on any modality" claim gets its hardest test). Start symbolic,
+then signal.
+
+## 11. Multi-language (the same reader, other languages)
+
+eoreader4.2's `tools/bootstrap-read.mjs` explicitly supports a `--lang` flag
+and deposits per-language "sediment," so the reader is designed to be pointed
+at non-English text. Testing the fold signal across languages checks whether
+the operator vocabulary is genuinely structural or quietly English-specific.
+
+| Source | URL | Languages | Status |
+|---|---|---|---|
+| Project Gutenberg (non-English) | https://www.gutenberg.org | French, German, Finnish, Dutch, Italian, Spanish, Portuguese, … (filter catalog by `Language`) | Public domain — same access pattern as the English path, just a different `Language` filter in `scripts/gutenberg-corpus.py` |
+| Wikisource (per language) | `{lang}.wikisource.org` | ~70 languages | Public domain / CC |
+| Wikipedia (per language) | `{lang}.wikipedia.org/w/api.php` | ~300 languages | CC BY-SA |
+| OPUS (open parallel corpora) | https://opus.nlpl.eu | 100s of languages, aligned translations | Mixed open — aligned pairs let you test the SAME content read in two languages |
+| Tatoeba | https://tatoeba.org | 400+ languages, sentence-level | CC BY 2.0 — short sentences, good for quick cross-language coverage |
+| Leipzig Corpora Collection | https://wortschatz.uni-leipzig.de/en/download | 250+ languages, news/web/wiki subsets | CC BY-NC — NC clause |
+
+Non-Latin scripts (Japanese, Arabic, Chinese) are the sharper test: the
+reader's segmentation (`segment.js`) splits on terminal punctuation and blank
+lines, assumptions that don't hold for scripts without spaces or with different
+sentence delimiters — expect that to surface as the first thing to fix.
+
+## 12. Non-Western / world music (audio)
 
 Honest framing first: genuine public-domain *non-Western* music at real
 volume is thin. Most world music is 20th-century-or-later and still under
 copyright (artist or estate), and a lot of the historical field-recording
 archives that exist were made under colonial-era conditions worth being
-aware of, not just extraction-worth-flagging.
+aware of, not just extraction-worth-flagging. This complements rather than
+duplicates §10's Western classical/sheet-music sources — different musical
+traditions, same "audio isn't scripted here yet" caveat.
 
 | Source | URL | Access | Status |
 |---|---|---|---|
@@ -106,9 +206,9 @@ If the goal is genuine breadth of *musical tradition* rather than volume,
 the Lomax archive and Great 78 Project are the two worth prioritizing —
 everything else here skews Western-contemporary despite the CC license.
 Not scripted here (audio, not text — out of scope for a text-priors corpus
-until eoPriors goes cross-modal; see §7's framing too).
+until eoPriors goes cross-modal; see §7's and §10's framing too).
 
-## 9. Mysticism (broad aggregator)
+## 13. Mysticism (broad aggregator)
 
 | Source | URL | Access | Status |
 |---|---|---|---|
@@ -116,7 +216,7 @@ until eoPriors goes cross-modal; see §7's framing too).
 | Nag Hammadi Library (older PD translations) | via sacred-texts.com and archive.org | Same as above, or via Internet Archive item search | The modern standard English translation (Robinson, 1977+) is still copyrighted — use the earlier public-domain partial translations/fragments instead if strict PD matters |
 | Corpus Hermeticum (Mead translation) | https://sacred-texts.com/eso/city/ or Gutenberg | Static text | Public domain (G.R.S. Mead, early 1900s) |
 
-## 10. Holy texts in original languages
+## 14. Holy texts in original languages
 
 This is the category where "original language" and "public domain
 English translation" are different assets — listing the original-language
@@ -153,7 +253,7 @@ and Nestle 1904 — via shallow `git clone` of their GitHub repos. The
 Sanskrit (GRETIL), Chinese (ctext.org/CBETA), Avestan, Sikh, and
 cuneiform (ETCSL/CDLI) rows are catalogued but not yet scripted.
 
-## 11. Western canon — as complete as public domain allows
+## 15. Western canon — as complete as public domain allows
 
 Gutenberg, Standard Ebooks, and Wikisource (§1–2) already carry a lot of
 this, but they're incomplete and unstructured for it — no guaranteed
@@ -252,7 +352,7 @@ public-domain translations elsewhere on this list.
   rate-limited download, manifest.csv. It's the source in this table
   that's wired up and tested against `scripts/run-fold-bridge.mjs`.
 - **`scripts/holy-texts-corpus.py`**, **`scripts/western-canon-corpus.py`**,
-  and **`scripts/shakespeare-corpus.py`** (this repo) cover the newer §10/§11
+  and **`scripts/shakespeare-corpus.py`** (this repo) cover the newer §14/§15
   sources — original-language scripture, classical/patristic texts, and the
   complete works of Shakespeare respectively. Each writes its own
   `manifest.csv` in the same shape as the Gutenberg script; none of the

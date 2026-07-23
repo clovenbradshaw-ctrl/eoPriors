@@ -8,6 +8,15 @@
 // grammatical structure to do that. A v1 heuristic: known to under-split on
 // abbreviations ("Mr. Smith") and decimal numbers ("3.14") the way a full NLP
 // pipeline wouldn't. Stated here rather than silently passed off as exact.
+//
+// The sentence grain is for PROSE. Line-oriented content — source code,
+// poetry, lists, tabular data — terminates statements with NEWLINES, not
+// ./!/?, so under sentence grain a whole block collapses into one span (a
+// 12-line import block reads as a single "sentence"). For that content use
+// the LINE grain (segmentLines / segmentObservations().lines): one span per
+// non-blank line, which is the natural observation unit there. The caller
+// picks the grain the way the fold bridge picks a modality organ — segment.js
+// does not sniff content type. Sentence-grain output is unchanged by this.
 
 const trimSpan = (text, start, end) => {
   let s = start, e = end;
@@ -61,18 +70,39 @@ export function segmentSentences(text, baseOffset = 0) {
   return spans;
 }
 
+// Lines within a span of text: one span per non-blank line, offsets absolute,
+// blank lines dropped (they carry no content to compress). The line grain for
+// content whose statement terminator is the newline, not ./!/? — see the file
+// header. `baseOffset` shifts returned offsets so a caller can segment a
+// paragraph span and still get absolute offsets into the original text.
+export function segmentLines(text, baseOffset = 0) {
+  const spans = [];
+  let start = 0;
+  const pushLine = (s, e) => {
+    const [ts, te] = trimSpan(text, s, e);
+    if (te > ts) spans.push({ kind: 'line', start: ts + baseOffset, end: te + baseOffset, text: text.slice(ts, te) });
+  };
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] === '\n') { pushLine(start, i); start = i + 1; }
+  }
+  pushLine(start, text.length);
+  return spans;
+}
+
 // The convenience entry point: paragraph spans plus, nested under each, its
-// sentence spans — both sets returned flat so a caller can pick either grain
-// as the observation unit. Every span's offsets are absolute against `text`
-// (the representation the selector.schema.json text_position must be exact
-// against).
+// sentence spans AND its line spans — every set returned flat so a caller can
+// pick whichever grain fits the content (sentence for prose, line for
+// code/poetry/lists). Every span's offsets are absolute against `text` (the
+// representation the selector.schema.json text_position must be exact
+// against). `sentences` is byte-identical to before this function grew a
+// `lines` grain; `lines` is purely additive.
 export function segmentObservations(text) {
   const paragraphs = segmentParagraphs(text);
   const sentences = [];
+  const lines = [];
   paragraphs.forEach((p, paragraphIndex) => {
-    for (const s of segmentSentences(p.text, p.start)) {
-      sentences.push({ ...s, paragraph_index: paragraphIndex });
-    }
+    for (const s of segmentSentences(p.text, p.start)) sentences.push({ ...s, paragraph_index: paragraphIndex });
+    for (const l of segmentLines(p.text, p.start)) lines.push({ ...l, paragraph_index: paragraphIndex });
   });
-  return { paragraphs, sentences };
+  return { paragraphs, sentences, lines };
 }

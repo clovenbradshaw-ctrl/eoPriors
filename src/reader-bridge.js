@@ -77,6 +77,95 @@ export async function loadReader({ eoreaderPath } = {}) {
   return { createParser: parseMod.createParser, readingAt: readingMod.readingAt };
 }
 
+// Lazily imports eoreader4.2's MUSIC path — the same modality-blind readingAt,
+// but fed by the music organ (ingestMusic) instead of the text parser, and
+// parseMidi to decode Standard MIDI File bytes into notes first. This is the
+// concrete "same core, different perceiver" seam: ingestMusic emits INS + CON
+// onto the SAME EO log text uses (src/organs/in/music.js — each note an INS
+// at its pitch class, each consecutive interval a CON), so readingToFold and
+// measureFold consume a music doc identically to a text doc.
+//
+// Caveat worth knowing before interpreting music folds: the music organ emits
+// ONLY INS + CON (plus readingToFold's always-on EVA, conditional REC, and
+// held-NUL). It structurally cannot produce SEG/DEF/SYN/SIG folds — so a
+// music-vs-text comparison that finds "music lacks DEF" is partly reading the
+// organ's operator vocabulary, not a deep truth about music. Differences
+// WITHIN the shared INS/CON/NUL cells (e.g. music being far more CON-heavy)
+// are the non-tautological signal.
+export async function loadMusicReader({ eoreaderPath } = {}) {
+  const root = eoreaderPath || process.env.EOREADER_PATH || DEFAULT_EOREADER_PATH;
+  let musicMod, midiMod, readingMod;
+  try {
+    [musicMod, midiMod, readingMod] = await Promise.all([
+      import(path.join(root, 'src/organs/in/music.js')),
+      import(path.join(root, 'src/rooms/reader/midi.js')),
+      import(path.join(root, 'src/perceiver/reading.js')),
+    ]);
+  } catch (err) {
+    throw new Error(
+      `reader-bridge: couldn't load eoreader4.2 music path from "${root}" — checkout it ` +
+      `as a sibling of this repo, or set eoreaderPath/EOREADER_PATH. (${err.message})`
+    );
+  }
+  return { ingestMusic: musicMod.ingestMusic, parseMidi: midiMod.parseMidi, readingAt: readingMod.readingAt };
+}
+
+// MIDI bytes -> a music doc ready for readingAt, via the recipe
+// eoreader4.2's own import-file.js uses (parseMidi -> note objects ->
+// ingestMusic). Returns { doc, notesParsed }.
+export async function midiBytesToDoc(bytes, { name = 'midi', eoreaderPath } = {}) {
+  const { ingestMusic, parseMidi } = await loadMusicReader({ eoreaderPath });
+  const parsed = parseMidi(bytes);
+  const doc = ingestMusic({
+    name,
+    notes: parsed.notes.map((n) => ({ name: n.name, midi: n.midi, start: n.start, dur: n.dur, velocity: n.velocity, track: n.track, channel: n.channel })),
+  });
+  return { doc, notesParsed: parsed.notes.length };
+}
+
+// Lazily imports eoreader4.2's DNA path — the same modality-blind readingAt,
+// fed by the codon organ. parseFasta strips the ">" header and returns a bare
+// ACGT string; codonsOf splits it into triplets; ingestCodons emits INS per
+// codon + CON to the previous codon onto the SAME EO log (src/organs/in/
+// codon.js). All three live in the organs barrel; readingAt is the same one
+// text and music use.
+//
+// Caveat worth knowing before interpreting DNA folds: the codon organ gives
+// each codon a POSITIONAL id (n0, n1, ...), not a recurring class the way
+// music's id is the pitch class. So every codon reads as a brand-new entity
+// bonded to the previous by the constant via 'next' — DNA folds are nearly
+// uniform (INS + CON + the always-on EVA/REC), with none of the recurrence
+// structure that gives music and text their variety. That is a property of
+// how this organ models a reading frame (pure sequence, no recurrence), not a
+// bug — and it is itself the interesting cross-modal finding.
+export async function loadDnaReader({ eoreaderPath } = {}) {
+  const root = eoreaderPath || process.env.EOREADER_PATH || DEFAULT_EOREADER_PATH;
+  let organsMod, readingMod;
+  try {
+    [organsMod, readingMod] = await Promise.all([
+      import(path.join(root, 'src/organs/in/index.js')),
+      import(path.join(root, 'src/perceiver/reading.js')),
+    ]);
+  } catch (err) {
+    throw new Error(
+      `reader-bridge: couldn't load eoreader4.2 DNA path from "${root}" — checkout it ` +
+      `as a sibling of this repo, or set eoreaderPath/EOREADER_PATH. (${err.message})`
+    );
+  }
+  return { parseFasta: organsMod.parseFasta, codonsOf: organsMod.codonsOf, ingestCodons: organsMod.ingestCodons, readingAt: readingMod.readingAt };
+}
+
+// FASTA text -> a codon doc ready for readingAt, via the chain eoreader4.2's
+// locus.js/codon.js expose (parseFasta -> codonsOf -> ingestCodons). Returns
+// { doc, codonsParsed }. `frame` selects the reading frame (0/1/2).
+export async function fastaToDoc(fastaText, { name = 'dna', frame = 0, eoreaderPath } = {}) {
+  const { parseFasta, codonsOf, ingestCodons } = await loadDnaReader({ eoreaderPath });
+  const seq = parseFasta(fastaText);
+  const codons = codonsOf(seq, frame);
+  const doc = ingestCodons({ codons, name });
+  return { doc, codonsParsed: codons.length };
+}
+
 export function synEventsAt(doc, at) {
   const events = typeof doc.log.snapshot === 'function' ? doc.log.snapshot() : (doc.log.events || []);
   return events.filter((e) => e.op === 'SYN' && e.sentIdx === at);
