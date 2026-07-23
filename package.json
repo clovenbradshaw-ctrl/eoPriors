@@ -17,7 +17,8 @@
     "crossval:fold-priors": "node scripts/crossval-fold-priors.mjs",
     "experiment:reading-improvement": "node scripts/reading-improvement-experiment.mjs",
     "experiment:emergence": "node scripts/emergence-on-corpus.mjs",
-    "experiment:genre-discrimination": "node scripts/genre-discrimination-experiment.mjs"
+    "experiment:genre-discrimination": "node scripts/genre-discrimination-experiment.mjs",
+    "probe:cross-modal": "node scripts/cross-modal-probe.mjs"
   },
   "engines": {
     "node": ">=20"

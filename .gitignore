@@ -5,3 +5,4 @@ node_modules/
 # Corpus text pulled by scripts/gutenberg-corpus.py or similar — source
 # material lives outside the ledger (SPEC.md: events and URIs, not blobs).
 /gutenberg_corpus/
+/diverse_corpus/
