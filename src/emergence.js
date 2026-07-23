@@ -4,6 +4,23 @@
 // the previous projection's holon registry (for identity continuity) — no
 // side effects, no I/O, so src/replay.js can call it deterministically.
 //
+// NAMING: a holon's `tier` (Figure/Pattern/Ground below) is a CONDENSATION
+// LEVEL — how far this holon collapsed from raw observations, per SPEC.md §6.
+// It is NOT the phasepost cube's Ground/Figure/Pattern GRAIN axis
+// (data/phasepost-cells.json, schemas/representation.schema.json's
+// `grainKey`) — two independently-real concepts that happen to share three
+// words, previously also sharing the property name `grain` on a holon
+// object, which reads as a claim that a Pattern-TIER holon's own evidence
+// sits at Pattern-GRAIN. It never does: a holon's `prototype` is the mean of
+// its members' phasepost_measurements, which (today) only ever carry
+// Figure/Ground-grain amplitude — see representation.schema.json's own
+// grainKey doc comment, which already reserves Pattern-grain for "the
+// projector's own Figure→Pattern condensation" as future work, not something
+// this module does yet. Renamed the property to `tier` so the two axes can
+// no longer be confused by name alone; the words Figure/Pattern/Ground stay,
+// because SPEC.md's own vocabulary for condensation levels legitimately uses
+// them ("Figures condense... Patterns condense... Ground holons condense").
+//
 // ── The gain formula, made concrete ─────────────────────────────────────────
 // SPEC.md §6: gain(H) = Σ DL(E_i) − [DL(H) + Σ DL(E_i | H)]
 //
@@ -140,7 +157,7 @@ export function condenseFigures(observations, policy = {}) {
   const { condensed, residual } = condenseByGain(items, { mintOverheadBits: policy.mintOverheadBits });
   const figures = condensed.map((c) => {
     const { gain_bits, prototype } = compressionGainBits(c.probabilityVectors, { mintOverheadBits: policy.mintOverheadBits });
-    return { grain: 'Figure', supporting_observation_ids: c.memberIds, source_ids: [...c.sourceIds], prototype, gain_bits };
+    return { tier: 'Figure', supporting_observation_ids: c.memberIds, source_ids: [...c.sourceIds], prototype, gain_bits };
   });
   const residualObservations = residual.map((c) => ({ id: c.memberIds[0], sourceId: [...c.sourceIds][0], probabilities: c.probabilityVectors[0] }));
   return { figures, residualObservations };
@@ -190,7 +207,7 @@ export function promoteFigurePatterns(figures, policy = {}) {
 
     const { gain_bits, prototype } = compressionGainBits(cluster.probabilityVectors, { mintOverheadBits: policy.mintOverheadBits });
     const supporting_observation_ids = memberIdxs.flatMap((idx) => figures[idx].supporting_observation_ids);
-    patterns.push({ grain: 'Pattern', supporting_observation_ids, source_ids: [...distinctSources], prototype, gain_bits });
+    patterns.push({ tier: 'Pattern', supporting_observation_ids, source_ids: [...distinctSources], prototype, gain_bits });
     memberIdxs.forEach((idx) => promotedFigureIdx.add(idx));
   }
 
@@ -211,10 +228,10 @@ export function promoteFigurePatterns(figures, policy = {}) {
 // Crucially, this must NOT reuse Figure-tier's mint overhead: condenseFigures
 // already ran the identical greedy-gain-merge over this exact pool (residuals
 // ARE its leftovers), so anything that clears the same bar would already have
-// merged there. Ground has to be a genuinely CHEAPER holon to mint — which is
-// exactly the cube's own reading of the grain (Ground is the ambient
-// condition, ridden not committed; Figure is the specific committed thing,
-// docs/cube.md) — for this tier to ever find anything at all.
+// merged there. Ground has to be a genuinely CHEAPER holon to mint — which
+// rhymes with (but is not derived from) the cube's own reading of Ground-
+// GRAIN (the ambient condition, ridden not committed, vs. Figure the specific
+// committed thing, docs/cube.md) — for this tier to ever find anything at all.
 const GROUND_OVERHEAD_FRACTION = 0.5;
 
 export function condenseGround(residualObservations, policy = {}) {
@@ -226,7 +243,7 @@ export function condenseGround(residualObservations, policy = {}) {
     .filter((c) => c.sourceIds.size >= 2)
     .map((c) => {
       const { gain_bits, prototype } = compressionGainBits(c.probabilityVectors, { mintOverheadBits: groundOverhead });
-      return { grain: 'Ground', supporting_observation_ids: c.memberIds, source_ids: [...c.sourceIds], prototype, gain_bits };
+      return { tier: 'Ground', supporting_observation_ids: c.memberIds, source_ids: [...c.sourceIds], prototype, gain_bits };
     });
 }
 
@@ -245,14 +262,14 @@ function jaccard(a, b) {
 }
 
 export async function assignHolonIdentity(candidate, previousHolons, { threshold = DEFAULT_IDENTITY_THRESHOLD } = {}) {
-  const sameGrain = previousHolons.filter((h) => h.grain === candidate.grain);
+  const sameTier = previousHolons.filter((h) => h.tier === candidate.tier);
   let best = null;
-  for (const prev of sameGrain) {
+  for (const prev of sameTier) {
     const overlap = jaccard(candidate.supporting_observation_ids, prev.supporting_observation_ids);
     if (!best || overlap > best.overlap) best = { overlap, prev };
   }
   const mintedId = await contentRef('holon', canonicalize({
-    grain: candidate.grain,
+    tier: candidate.tier,
     prototype: candidate.prototype,
     supporting_observation_ids: [...candidate.supporting_observation_ids].sort(),
   }));
@@ -262,7 +279,7 @@ export async function assignHolonIdentity(candidate, previousHolons, { threshold
   if (best && best.overlap > 0) {
     return {
       holon_id: mintedId,
-      rebound: { previous_holon_id: best.prev.holon_id, candidate_holon_id: mintedId, overlap: best.overlap, grain: candidate.grain },
+      rebound: { previous_holon_id: best.prev.holon_id, candidate_holon_id: mintedId, overlap: best.overlap, tier: candidate.tier },
     };
   }
   return { holon_id: mintedId, rebound: null };
@@ -270,7 +287,7 @@ export async function assignHolonIdentity(candidate, previousHolons, { threshold
 
 // ── Top-level orchestration ─────────────────────────────────────────────
 // observations: [{ observation_id, source_id, phasepost_measurements }]
-// previousHolons: [{ holon_id, grain, supporting_observation_ids }] from the
+// previousHolons: [{ holon_id, tier, supporting_observation_ids }] from the
 // prior projection snapshot, or [] on a first build.
 export async function emergeHolons({ basisId, observations, previousHolons = [], policy = {} }) {
   const { figures, residualObservations } = condenseFigures(observations, policy);

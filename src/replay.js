@@ -197,9 +197,9 @@ export async function buildProjection({
       events_resolved: resolvedEvents.length,
       events_retracted: retractedIds.size,
       observations_declined: resolvedEvents.filter((e) => e.event_type === 'observation.declined').length,
-      holons_ground: lens.holons.filter((h) => h.grain === 'Ground').length,
-      holons_figure: lens.holons.filter((h) => h.grain === 'Figure').length,
-      holons_pattern: lens.holons.filter((h) => h.grain === 'Pattern').length,
+      holons_ground: lens.holons.filter((h) => h.tier === 'Ground').length,
+      holons_figure: lens.holons.filter((h) => h.tier === 'Figure').length,
+      holons_pattern: lens.holons.filter((h) => h.tier === 'Pattern').length,
     },
   }));
 

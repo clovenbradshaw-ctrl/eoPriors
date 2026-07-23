@@ -56,9 +56,9 @@ const timed = async (label, fn) => {
 };
 
 function summarize(holons) {
-  const byGrain = { Figure: [], Pattern: [], Ground: [] };
-  for (const h of holons) byGrain[h.grain].push(h);
-  return Object.fromEntries(Object.entries(byGrain).map(([grain, hs]) => [grain, {
+  const byTier = { Figure: [], Pattern: [], Ground: [] };
+  for (const h of holons) byTier[h.tier].push(h);
+  return Object.fromEntries(Object.entries(byTier).map(([tier, hs]) => [tier, {
     count: hs.length,
     avgGainBits: hs.length ? +(hs.reduce((s, h) => s + h.gain_bits, 0) / hs.length).toFixed(4) : 0,
     avgMemberCount: hs.length ? +(hs.reduce((s, h) => s + h.supporting_observation_ids.length, 0) / hs.length).toFixed(2) : 0,

@@ -81,7 +81,7 @@ test('condenseGround finds condensation among residuals at its own (lower) bar',
   ];
   const grounds = condenseGround(residuals, { mintOverheadBits: 0.01 });
   assert.equal(grounds.length, 1);
-  assert.equal(grounds[0].grain, 'Ground');
+  assert.equal(grounds[0].tier, 'Ground');
   assert.deepEqual(new Set(grounds[0].supporting_observation_ids), new Set(['r1', 'r2']));
 });
 
@@ -95,9 +95,9 @@ test('condenseGround requires at least 2 distinct sources', () => {
 
 test('promoteFigurePatterns: two independently-sourced, near-identical figures merge into one Pattern that survives holdout', () => {
   const figures = [
-    { grain: 'Figure', supporting_observation_ids: ['o1', 'o2'], source_ids: ['s1'], prototype: dist('A', 0.9), gain_bits: 1 },
-    { grain: 'Figure', supporting_observation_ids: ['o3', 'o4'], source_ids: ['s2'], prototype: dist('A', 0.9), gain_bits: 1 },
-    { grain: 'Figure', supporting_observation_ids: ['o5', 'o6'], source_ids: ['s3'], prototype: dist('A', 0.9), gain_bits: 1 },
+    { tier: 'Figure', supporting_observation_ids: ['o1', 'o2'], source_ids: ['s1'], prototype: dist('A', 0.9), gain_bits: 1 },
+    { tier: 'Figure', supporting_observation_ids: ['o3', 'o4'], source_ids: ['s2'], prototype: dist('A', 0.9), gain_bits: 1 },
+    { tier: 'Figure', supporting_observation_ids: ['o5', 'o6'], source_ids: ['s3'], prototype: dist('A', 0.9), gain_bits: 1 },
   ];
   const { patterns, remainingFigures } = promoteFigurePatterns(figures, { mintOverheadBits: 0.3 });
   assert.equal(patterns.length, 1);
@@ -106,26 +106,26 @@ test('promoteFigurePatterns: two independently-sourced, near-identical figures m
 });
 
 test('promoteFigurePatterns: a single-source figure is never promoted alone', () => {
-  const figures = [{ grain: 'Figure', supporting_observation_ids: ['o1', 'o2'], source_ids: ['s1'], prototype: dist('A', 0.9), gain_bits: 1 }];
+  const figures = [{ tier: 'Figure', supporting_observation_ids: ['o1', 'o2'], source_ids: ['s1'], prototype: dist('A', 0.9), gain_bits: 1 }];
   const { patterns, remainingFigures } = promoteFigurePatterns(figures, { mintOverheadBits: 0.3 });
   assert.equal(patterns.length, 0);
   assert.equal(remainingFigures.length, 1);
 });
 
 test('assignHolonIdentity: full overlap reuses the id; partial overlap is a rebound; zero overlap mints silently', async () => {
-  const previous = [{ holon_id: 'holon:sha256:' + '1'.repeat(64), grain: 'Figure', supporting_observation_ids: ['o1', 'o2', 'o3'] }];
+  const previous = [{ holon_id: 'holon:sha256:' + '1'.repeat(64), tier: 'Figure', supporting_observation_ids: ['o1', 'o2', 'o3'] }];
 
-  const sameCandidate = { grain: 'Figure', supporting_observation_ids: ['o1', 'o2', 'o3'], prototype: dist('A', 0.9) };
+  const sameCandidate = { tier: 'Figure', supporting_observation_ids: ['o1', 'o2', 'o3'], prototype: dist('A', 0.9) };
   const same = await assignHolonIdentity(sameCandidate, previous, { threshold: 0.5 });
   assert.equal(same.holon_id, previous[0].holon_id);
   assert.equal(same.rebound, null);
 
-  const partialCandidate = { grain: 'Figure', supporting_observation_ids: ['o1', 'o9', 'o10', 'o11'], prototype: dist('A', 0.9) }; // jaccard = 1/6 < 0.5, > 0
+  const partialCandidate = { tier: 'Figure', supporting_observation_ids: ['o1', 'o9', 'o10', 'o11'], prototype: dist('A', 0.9) }; // jaccard = 1/6 < 0.5, > 0
   const partial = await assignHolonIdentity(partialCandidate, previous, { threshold: 0.5 });
   assert.notEqual(partial.holon_id, previous[0].holon_id);
   assert.ok(partial.rebound, 'an ambiguous (nonzero but below-threshold) overlap must be recorded, not silently reassigned');
 
-  const disjointCandidate = { grain: 'Figure', supporting_observation_ids: ['zzz'], prototype: dist('A', 0.9) };
+  const disjointCandidate = { tier: 'Figure', supporting_observation_ids: ['zzz'], prototype: dist('A', 0.9) };
   const disjoint = await assignHolonIdentity(disjointCandidate, previous, { threshold: 0.5 });
   assert.equal(disjoint.rebound, null, 'a genuinely new holon with zero overlap is not ambiguous');
 });
