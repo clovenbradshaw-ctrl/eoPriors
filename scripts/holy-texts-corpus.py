@@ -31,12 +31,19 @@ tree, or one covered by .gitignore.
 import argparse
 import csv
 import json
+import re
 import shutil
 import subprocess
 import time
 from pathlib import Path
 
 import requests
+
+_TAG_RE = re.compile(r"<[^>]+>")
+
+
+def _strip_tags(s):
+    return _TAG_RE.sub("", s)
 
 UA = "eoPriors-corpus-builder/1.0 (personal research corpus; contact: set-your-email)"
 
@@ -88,11 +95,18 @@ def fetch_tanakh(out_dir, manifest, delay=0.5):
             payload = r.json()
             he = payload.get("he")
             en = payload.get("text")
-            fname = d / f"{book.replace(' ', '_')}.json"
+            stem = book.replace(" ", "_")
+            fname = d / f"{stem}.json"
             fname.write_text(json.dumps({"book": book, "he": he, "en": en},
                                          ensure_ascii=False, indent=1), encoding="utf-8")
+            # Also a plain-text sibling (Hebrew, footnote markup stripped) —
+            # the fold-bridge pipeline (scripts/run-fold-bridge.mjs,
+            # crossval-fold-priors.mjs) only reads *.txt.
+            he_lines = [_strip_tags(x).strip() for x in _flatten(he)] if he else []
+            txt_path = d / f"{stem}.txt"
+            txt_path.write_text("\n".join(ln for ln in he_lines if ln), encoding="utf-8")
             chars = sum(len(x) for x in _flatten(he)) if he else 0
-            manifest.append({"source": "tanakh", "unit": book, "chars": chars, "path": str(fname)})
+            manifest.append({"source": "tanakh", "unit": book, "chars": chars, "path": str(txt_path)})
             print(f"  {book}")
         except requests.RequestException as e:
             print(f"  skip {book}: {e}")
@@ -107,37 +121,43 @@ def _flatten(x):
             yield from _flatten(i)
 
 
-# ── Pali Canon via SuttaCentral ──────────────────────────────────────────────
-SUTTACENTRAL_API = "https://suttacentral.net/api/suttas/{uid}/pli"
-# A small curated cross-section rather than a full-canon crawl — the API has
-# no "list every sutta" endpoint worth scripting against; expand this list as
-# needed.
+# ── Pali Canon via SuttaCentral's bilara-data repo ──────────────────────────
+# The suttacentral.net "/api/suttas/{uid}/pli" endpoint (tried first) returns
+# only metadata (root_text/translation both null) for every uid checked —
+# the actual segmented Pali root text lives in the segment-keyed JSON files
+# of the suttacentral/bilara-data GitHub repo instead, fetched raw (no git
+# clone needed, one file per sutta).
+BILARA_ROOT = "https://raw.githubusercontent.com/suttacentral/bilara-data/master/root/pli/ms/sutta/{nikaya}/{uid}_root-pli-ms.json"
+# Curated to Dīgha and Majjhima Nikāya, whose files follow the simple
+# {nikaya}/{uid}_root-pli-ms.json path; Saṁyutta/Aṅguttara/Khuddaka use a
+# nested-by-vagga path that isn't a flat lookup — expand PALI_SUTTAS only
+# with uids confirmed to follow the DN/MN pattern, or add the extra path
+# logic for the other nikayas.
 PALI_SUTTAS = [
     "dn1", "dn2", "dn16", "dn22",
     "mn1", "mn10", "mn26", "mn118",
-    "sn12.1", "sn56.11",
-    "an1.1", "an4.13",
-    "dhp1", "dhp2",
 ]
 
 
 def fetch_pali_canon(out_dir, manifest, delay=0.5):
-    print("Pali Canon (SuttaCentral API, Pali root text + translation)...")
+    print("Pali Canon (suttacentral/bilara-data, Pali root text, DN + MN)...")
     d = out_dir / "pali_canon"
     d.mkdir(parents=True, exist_ok=True)
     for uid in PALI_SUTTAS:
-        url = SUTTACENTRAL_API.format(uid=uid)
+        nikaya = uid[:2]
+        url = BILARA_ROOT.format(nikaya=nikaya, uid=uid)
         try:
             r = requests.get(url, headers={"User-Agent": UA}, timeout=30)
             if r.status_code != 200:
                 print(f"  skip {uid}: HTTP {r.status_code}")
                 continue
-            payload = r.json()
+            segments = r.json()  # {"dn1:1.1.1": "Evaṁ me sutaṁ—", ...}
             fname = d / f"{uid}.json"
-            fname.write_text(json.dumps(payload, ensure_ascii=False, indent=1), encoding="utf-8")
-            root = payload.get("root_text") or {}
-            chars = sum(len(str(v)) for v in root.values()) if isinstance(root, dict) else 0
-            manifest.append({"source": "pali_canon", "unit": uid, "chars": chars, "path": str(fname)})
+            fname.write_text(json.dumps(segments, ensure_ascii=False, indent=1), encoding="utf-8")
+            text = "\n".join(v.strip() for v in segments.values() if isinstance(v, str) and v.strip())
+            txt_path = d / f"{uid}.txt"
+            txt_path.write_text(text, encoding="utf-8")
+            manifest.append({"source": "pali_canon", "unit": uid, "chars": len(text), "path": str(txt_path)})
             print(f"  {uid}")
         except requests.RequestException as e:
             print(f"  skip {uid}: {e}")

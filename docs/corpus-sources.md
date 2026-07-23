@@ -248,10 +248,34 @@ Don't assume free API access implies free bulk-download access.
 `scripts/holy-texts-corpus.py` (this repo) wires up four of the rows above
 end to end: Quran (via the alquran.cloud API), Tanakh (via the Sefaria API,
 Hebrew + JPS English per book), a curated cross-section of the Pali Canon
-(via the SuttaCentral API), and both Greek NT critical editions — SBLGNT
-and Nestle 1904 — via shallow `git clone` of their GitHub repos. The
-Sanskrit (GRETIL), Chinese (ctext.org/CBETA), Avestan, Sikh, and
-cuneiform (ETCSL/CDLI) rows are catalogued but not yet scripted.
+(via `suttacentral/bilara-data`'s segment-keyed JSON — the suttacentral.net
+API's own `/api/suttas/{uid}/pli` endpoint was tried first and returns only
+metadata, `root_text`/`translation` both null, for every uid checked), and
+both Greek NT critical editions — SBLGNT and Nestle 1904 — via shallow
+`git clone` of their GitHub repos. The Sanskrit (GRETIL), Chinese
+(ctext.org/CBETA), Avestan, Sikh, and cuneiform (ETCSL/CDLI) rows are
+catalogued but not yet scripted.
+
+**Actually run through the fold pipeline** (`scripts/run-fold-bridge.mjs`,
+then `scripts/crossval-fold-priors.mjs` for a cross-validated prior), not
+just fetched:
+
+- **Pali Canon** (romanized Pali, period-punctuated): works end to end. An
+  8-sutta sample cross-validates cleanly (content-only KL vs. uniform ≈
+  1.4–1.8 bits, train-prior KL an order of magnitude lower) — small n, but
+  a genuine, generalizing prior, not just fetched text.
+- **Quran** and **Tanakh** (Arabic and Hebrew script): fetch correctly, but
+  produce **zero fold spans** — `run-fold-bridge.mjs` reports the entire
+  surah/book as `totalSentences: 1`. `segment.js`'s sentence splitter keys
+  on Latin terminal punctuation (`.`/`!`/`?`), which Arabic and the Hebrew
+  sof pasuq (׃) don't use the same way. This is the exact failure mode
+  §11's Multi-language section predicted for non-Latin scripts — confirmed,
+  not yet fixed. Wiring these up as priors needs a script/language-aware
+  segmenter change in eoreader4.2, out of scope for this catalog/fetch work.
+- **Greek NT** (SBLGNT/Nestle1904 XML): not yet run — `run-fold-bridge.mjs`
+  only reads `*.txt` from `--corpus-dir`, so the cloned per-book XML needs
+  a plain-text extraction step first (strip the TEI/USX markup down to
+  running Greek text) before it can hit the pipeline at all.
 
 ## 15. Western canon — as complete as public domain allows
 
@@ -272,6 +296,13 @@ its own row.
 
 `scripts/shakespeare-corpus.py` (this repo) pulls the Folger Complete Set
 by default and falls back to the Gutenberg single-file edition automatically.
+**Run through the actual pipeline, not just fetched**: the 42-play Folger
+TXT set cross-validates cleanly through `scripts/run-fold-bridge.mjs` and
+`scripts/crossval-fold-priors.mjs` — content-only KL(heldout‖prior) vs.
+uniform ≈ 0.5–1.0 bits across folds, vs. ≈ 0.2–0.3 bits for the trained
+aggregate prior itself, i.e. the aggregate prior generalizes to held-out
+plays far better than either a flat guess or any single play's own
+distribution. This is a genuinely wired-up prior, not just downloadable text.
 
 **Classical Greek and Latin (originals + translations)**
 
@@ -298,6 +329,14 @@ repos are large enough that a manual `git clone --depth 1` is the practical
 path, same carve-out as arXiv's bulk-access note in §5. PHI, Internet
 Classics Archive, and Bibliotheca Augustana are catalogued but not yet
 scripted.
+
+**Run through the actual pipeline, not just fetched**: a ~36-file sample
+(Latin Library originals + CCEL English translations, mixed) cross-validates
+cleanly — content-only KL vs. uniform ≈ 0.5–0.7 bits, train-prior KL two
+orders of magnitude lower. Confirms the fold pipeline handles Latin-script,
+period-punctuated Latin exactly like English prose (no segmentation issue
+here — that only shows up for non-Latin scripts, see §14's Quran/Tanakh
+note).
 
 **Modern national canons (non-English Western)**
 
