@@ -123,6 +123,49 @@ export async function midiBytesToDoc(bytes, { name = 'midi', eoreaderPath } = {}
   return { doc, notesParsed: parsed.notes.length };
 }
 
+// Lazily imports eoreader4.2's DNA path — the same modality-blind readingAt,
+// fed by the codon organ. parseFasta strips the ">" header and returns a bare
+// ACGT string; codonsOf splits it into triplets; ingestCodons emits INS per
+// codon + CON to the previous codon onto the SAME EO log (src/organs/in/
+// codon.js). All three live in the organs barrel; readingAt is the same one
+// text and music use.
+//
+// Caveat worth knowing before interpreting DNA folds: the codon organ gives
+// each codon a POSITIONAL id (n0, n1, ...), not a recurring class the way
+// music's id is the pitch class. So every codon reads as a brand-new entity
+// bonded to the previous by the constant via 'next' — DNA folds are nearly
+// uniform (INS + CON + the always-on EVA/REC), with none of the recurrence
+// structure that gives music and text their variety. That is a property of
+// how this organ models a reading frame (pure sequence, no recurrence), not a
+// bug — and it is itself the interesting cross-modal finding.
+export async function loadDnaReader({ eoreaderPath } = {}) {
+  const root = eoreaderPath || process.env.EOREADER_PATH || DEFAULT_EOREADER_PATH;
+  let organsMod, readingMod;
+  try {
+    [organsMod, readingMod] = await Promise.all([
+      import(path.join(root, 'src/organs/in/index.js')),
+      import(path.join(root, 'src/perceiver/reading.js')),
+    ]);
+  } catch (err) {
+    throw new Error(
+      `reader-bridge: couldn't load eoreader4.2 DNA path from "${root}" — checkout it ` +
+      `as a sibling of this repo, or set eoreaderPath/EOREADER_PATH. (${err.message})`
+    );
+  }
+  return { parseFasta: organsMod.parseFasta, codonsOf: organsMod.codonsOf, ingestCodons: organsMod.ingestCodons, readingAt: readingMod.readingAt };
+}
+
+// FASTA text -> a codon doc ready for readingAt, via the chain eoreader4.2's
+// locus.js/codon.js expose (parseFasta -> codonsOf -> ingestCodons). Returns
+// { doc, codonsParsed }. `frame` selects the reading frame (0/1/2).
+export async function fastaToDoc(fastaText, { name = 'dna', frame = 0, eoreaderPath } = {}) {
+  const { parseFasta, codonsOf, ingestCodons } = await loadDnaReader({ eoreaderPath });
+  const seq = parseFasta(fastaText);
+  const codons = codonsOf(seq, frame);
+  const doc = ingestCodons({ codons, name });
+  return { doc, codonsParsed: codons.length };
+}
+
 export function synEventsAt(doc, at) {
   const events = typeof doc.log.snapshot === 'function' ? doc.log.snapshot() : (doc.log.events || []);
   return events.filter((e) => e.op === 'SYN' && e.sentIdx === at);

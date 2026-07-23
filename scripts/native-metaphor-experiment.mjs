@@ -38,7 +38,7 @@
 // Usage: node scripts/native-metaphor-experiment.mjs --text-dir <dir> [--max-books N] [--eoreader-path <path>]
 
 import { readFileSync, readdirSync } from 'node:fs';
-import { loadReader, loadMusicReader, readingToFold } from '../src/reader-bridge.js';
+import { loadReader, loadMusicReader, loadDnaReader, fastaToDoc, readingToFold } from '../src/reader-bridge.js';
 import { measureFold, loadPhasepostCells } from '../src/fold.js';
 import { accumulate, normalize, restrictAndRenormalize, perSpanSurprise } from './lib/prior-crossval.mjs';
 import { mean } from './lib/stats.mjs';
@@ -76,7 +76,7 @@ const stripFrame = (t) => {
 
 function parseArgs(argv) {
   const get = (flag, dflt) => (argv.includes(flag) ? argv[argv.indexOf(flag) + 1] : dflt);
-  return { textDir: get('--text-dir', null), maxBooks: Number(get('--max-books', 20)), eoreaderPath: get('--eoreader-path', undefined) };
+  return { textDir: get('--text-dir', null), maxBooks: Number(get('--max-books', 20)), fasta: get('--fasta', null), eoreaderPath: get('--eoreader-path', undefined) };
 }
 
 async function foldsForDoc(doc, readingAt, cellsBundle, maxSpans) {
@@ -102,63 +102,97 @@ function perCellKL(itemsAgg, Q, cellKeys) {
 const topCells = (obj, n = 6) => Object.entries(obj).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1])).slice(0, n);
 
 async function main() {
-  const { textDir, maxBooks, eoreaderPath } = parseArgs(process.argv.slice(2));
-  if (!textDir) { console.error('usage: native-metaphor-experiment.mjs --text-dir <dir> [--max-books N]'); process.exit(1); }
+  const { textDir, maxBooks, fasta, eoreaderPath } = parseArgs(process.argv.slice(2));
+  if (!textDir) { console.error('usage: native-metaphor-experiment.mjs --text-dir <dir> [--max-books N] [--fasta <file>]'); process.exit(1); }
 
   const { createParser, readingAt } = await loadReader({ eoreaderPath });
   const { ingestMusic } = await loadMusicReader({ eoreaderPath });
   const cellsBundle = await loadPhasepostCells();
   const contentCellKeys = Object.keys(cellsBundle.cells).filter((c) => !EXCLUDED.includes(c));
 
+  // Each modality is a map of item-name -> array of content-cell fold vectors.
+  const modalities = {};
+
   const textFiles = readdirSync(textDir).filter((f) => f.endsWith('.txt')).sort().slice(0, maxBooks);
-  const textByItem = {};
+  modalities.text = {};
   for (const f of textFiles) {
     const doc = createParser().parse(stripFrame(readFileSync(`${textDir}/${f}`, 'utf8')));
     const units = (doc.units || doc.sentences || []).slice(SKIP);
-    textByItem[f] = restrictAndRenormalize(await foldsForDoc({ ...doc, units }, readingAt, cellsBundle, MAX_SENTENCES), contentCellKeys);
-    console.error(`  text  ${f}: ${textByItem[f].length} span-folds`);
+    modalities.text[f] = restrictAndRenormalize(await foldsForDoc({ ...doc, units }, readingAt, cellsBundle, MAX_SENTENCES), contentCellKeys);
+    console.error(`  text  ${f}: ${modalities.text[f].length} span-folds`);
   }
 
-  const musicByItem = {};
+  modalities.music = {};
   for (const [name, notes] of Object.entries(MELODIES)) {
-    musicByItem[name] = restrictAndRenormalize(await foldsForDoc(ingestMusic({ name, notes }), readingAt, cellsBundle, MAX_SENTENCES), contentCellKeys);
-    console.error(`  music ${name}: ${musicByItem[name].length} note-folds`);
+    modalities.music[name] = restrictAndRenormalize(await foldsForDoc(ingestMusic({ name, notes }), readingAt, cellsBundle, MAX_SENTENCES), contentCellKeys);
+    console.error(`  music ${name}: ${modalities.music[name].length} note-folds`);
   }
 
-  const allText = Object.values(textByItem).flat();
-  const allMusic = Object.values(musicByItem).flat();
-  const Qtext = normalize(accumulate(allText, contentCellKeys), contentCellKeys);
-  const Qmusic = normalize(accumulate(allMusic, contentCellKeys), contentCellKeys);
-
-  const scoreModality = (byItem, otherPrior) => {
-    const nativeBits = [], crossBits = [];
-    for (const held of Object.keys(byItem)) {
-      const trainSpans = Object.keys(byItem).filter((k) => k !== held).flatMap((k) => byItem[k]);
-      const Qown = normalize(accumulate(trainSpans, contentCellKeys), contentCellKeys);
-      nativeBits.push(...perSpanSurprise(byItem[held], Qown, contentCellKeys));
-      crossBits.push(...perSpanSurprise(byItem[held], otherPrior, contentCellKeys));
+  // DNA: one genome split into windows so leave-one-item-out has structure —
+  // each window is an "item" the way each book/melody is. Optional (--fasta).
+  if (fasta) {
+    const { doc } = await fastaToDoc(readFileSync(fasta, 'utf8'), { name: 'dna', eoreaderPath });
+    const allDnaFolds = restrictAndRenormalize(await foldsForDoc(doc, readingAt, cellsBundle, 280), contentCellKeys);
+    modalities.dna = {};
+    const WINDOWS = 14; // ~match the melody count so no modality dominates the pooled prior by sheer item count
+    const per = Math.ceil(allDnaFolds.length / WINDOWS);
+    for (let w = 0; w < WINDOWS; w++) {
+      const slice = allDnaFolds.slice(w * per, (w + 1) * per);
+      if (slice.length) modalities.dna[`window${w}`] = slice;
     }
-    return { nativeMean: +mean(nativeBits).toFixed(4), crossMean: +mean(crossBits).toFixed(4), n: nativeBits.length };
-  };
+    console.error(`  dna: ${Object.keys(modalities.dna).length} windows, ${allDnaFolds.length} codon-folds`);
+  }
 
-  const textScored = scoreModality(textByItem, Qmusic);
-  const musicScored = scoreModality(musicByItem, Qtext);
+  const names = Object.keys(modalities);
+  const priorOf = (m) => normalize(accumulate(Object.values(modalities[m]).flat(), contentCellKeys), contentCellKeys);
+  const priors = Object.fromEntries(names.map((m) => [m, priorOf(m)]));
+
+  // matrix[source][prior] = mean per-span surprise (bits) of source's folds
+  // under prior's Q. The DIAGONAL uses leave-one-item-out within the source so
+  // it isn't scoring against a prior that already contains the held item.
+  const matrix = {};
+  for (const src of names) {
+    matrix[src] = {};
+    for (const pri of names) {
+      const bits = [];
+      if (src === pri) {
+        for (const held of Object.keys(modalities[src])) {
+          const trainSpans = Object.keys(modalities[src]).filter((k) => k !== held).flatMap((k) => modalities[src][k]);
+          if (!trainSpans.length) continue;
+          bits.push(...perSpanSurprise(modalities[src][held], normalize(accumulate(trainSpans, contentCellKeys), contentCellKeys), contentCellKeys));
+        }
+      } else {
+        bits.push(...perSpanSurprise(Object.values(modalities[src]).flat(), priors[pri], contentCellKeys));
+      }
+      matrix[src][pri] = +mean(bits).toFixed(3);
+    }
+  }
+
+  // translation cost = extra bits over the source's own native (diagonal) cost.
+  const translationCost = {};
+  for (const src of names) {
+    translationCost[src] = {};
+    for (const pri of names) if (pri !== src) translationCost[src][pri] = +(matrix[src][pri] - matrix[src][src]).toFixed(3);
+  }
+
+  const conShare = Object.fromEntries(names.map((m) => [m, +(priors[m].CON_Binding_Link ?? 0).toFixed(3)]));
+
+  // per-cell metaphor for each ordered pair: where does source diverge from prior?
+  const metaphor = {};
+  for (const src of names) for (const pri of names) if (src !== pri) {
+    metaphor[`${src}_under_${pri}`] = topCells(perCellKL(priors[src], priors[pri], contentCellKeys), 4);
+  }
 
   console.log(JSON.stringify({
-    textItems: Object.keys(textByItem).length,
-    musicItems: Object.keys(musicByItem).length,
+    modalities: Object.fromEntries(names.map((m) => [m, Object.keys(modalities[m]).length])),
     contentCells: contentCellKeys.length,
-    text: { nativeBits: textScored.nativeMean, crossModalBits: textScored.crossMean, translationCost: +(textScored.crossMean - textScored.nativeMean).toFixed(4), spans: textScored.n },
-    music: { nativeBits: musicScored.nativeMean, crossModalBits: musicScored.crossMean, translationCost: +(musicScored.crossMean - musicScored.nativeMean).toFixed(4), spans: musicScored.n },
-    metaphor: {
-      music_vs_text_prior_topCells: topCells(perCellKL(Qmusic, Qtext, contentCellKeys)),
-      text_vs_music_prior_topCells: topCells(perCellKL(Qtext, Qmusic, contentCellKeys)),
-    },
-    aggregateProfiles: {
-      text: Object.fromEntries(topCells(Qtext, 6).map(([c, p]) => [c, +p.toFixed(3)])),
-      music: Object.fromEntries(topCells(Qmusic, 6).map(([c, p]) => [c, +p.toFixed(3)])),
-    },
-    caveat: 'Music organ emits only INS+CON, so SEG/DEF/SYN/SIG divergences are partly tautological; robust signal is CON-dominance within shared cells. Epsilon floor inflates bit magnitudes; direction is robust, exact bits are not.',
+    nativeBitsDiagonal: Object.fromEntries(names.map((m) => [m, matrix[m][m]])),
+    crossModalMatrix: matrix,          // matrix[source][prior] mean bits/span
+    translationCost,                   // extra bits over native, per (source, prior)
+    conShareByModality: conShare,      // the non-tautological metaphor axis
+    aggregateProfiles: Object.fromEntries(names.map((m) => [m, Object.fromEntries(topCells(priors[m], 6).map(([c, p]) => [c, +p.toFixed(3)]))])),
+    metaphor,
+    caveat: 'Music emits only INS+CON and the codon organ gives DNA positional (never-recurring) ids, so SEG/DEF/SYN/SIG absences are partly organ-vocabulary artifacts, not truths about the medium. Robust signal: CON-share differences within shared cells and the DIRECTION of the translation-cost matrix (a subset modality embeds cheaply into a richer one, not vice versa). Epsilon floor inflates absolute bit magnitudes.',
   }, null, 2));
 }
 
