@@ -169,14 +169,38 @@ export function synEventsAt(doc, at) {
   return events.filter((e) => e.op === 'SYN' && e.sentIdx === at);
 }
 
+// reading.ground's REAL shape (eoreader4.2 src/perceiver/reading.js:326-334, locked in by
+// its own tests/smoke.test.js): { novelty: {mass, probability}, bonds: {mass}, propositions:
+// {mass, axes} } — nested objects, field names novelty/bonds/propositions, and `mass` is a
+// raw structural quantity (a reserve amplitude, a Set.size bond count, a decayed proposition
+// sum), NOT a ppm-scaled probability. An earlier version of this function guessed at flat
+// ppm field names (novelty_ppm/field_ppm/atmosphere_ppm) that eoreader4.2 never produced —
+// every guess missed, groundEventsFor silently returned [] for every real reading, and the
+// Ground grain (9 of the 27 phasepost cells) went dark for every fold ever built through this
+// bridge. Confirmed empirically: 0 Ground-grain events across a complete Frankenstein read
+// (3364 spans), despite reading.ground carrying real, growing prior mass throughout (bond
+// count 44→1570, proposition mass tracked across up to 3374 axes).
+//
+// Fix: read the real field names, and normalize the three raw masses to a SHARE of their own
+// sum (not an absolute probability — bonds.mass/propositions.mass are unbounded counts/sums,
+// not proportions, so there is no principled absolute ppm for them the way pNovel already is
+// for novelty). This answers the question readingToFold actually needs answered — "of the
+// Ground evidence standing at this span, how should its fold weight split across Void/Field/
+// Atmosphere" — using only quantities eoreader4.2 already computes, nothing invented to fill
+// a channel with no genuine evidence behind it.
 function groundEventsFor(reading) {
-  const g = reading.ground || reading.groundPrior || reading.priorTerrains;
+  const g = reading.ground;
   if (!g || typeof g !== 'object') return [];
-  const ppm = (v) => Math.max(0, Math.min(1_000_000, Math.round(Number(v) || 0)));
+  const noveltyMass = Math.max(0, Number(g.novelty?.mass) || 0);
+  const fieldMass = Math.max(0, Number(g.bonds?.mass) || 0);
+  const atmosphereMass = Math.max(0, Number(g.propositions?.mass) || 0);
+  const total = noveltyMass + fieldMass + atmosphereMass;
+  if (total <= 0) return [];
+  const share = (m) => Math.max(0, Math.min(1_000_000, Math.round((m / total) * 1_000_000)));
   const events = [];
-  const novelty = ppm(g.novelty_ppm ?? g.void_ppm ?? g.novelty);
-  const field = ppm(g.field_ppm ?? g.priorBond_ppm ?? g.field);
-  const atmosphere = ppm(g.atmosphere_ppm ?? g.priorProp_ppm ?? g.atmosphere);
+  const novelty = share(noveltyMass);
+  const field = share(fieldMass);
+  const atmosphere = share(atmosphereMass);
   if (novelty > 0) events.push({ op: 'INS', grain: 'Ground', weight_hint_ppm: novelty, source: 'ground:novelty' });
   if (field > 0) events.push({ op: 'CON', grain: 'Ground', weight_hint_ppm: field, source: 'ground:field' });
   if (atmosphere > 0) events.push({ op: 'REC', grain: 'Ground', weight_hint_ppm: atmosphere, source: 'ground:atmosphere' });
