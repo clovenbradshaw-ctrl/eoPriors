@@ -6,3 +6,5 @@ node_modules/
 # material lives outside the ledger (SPEC.md: events and URIs, not blobs).
 /gutenberg_corpus/
 /diverse_corpus/
+/journalism_corpus/
+/bytes_corpus/
