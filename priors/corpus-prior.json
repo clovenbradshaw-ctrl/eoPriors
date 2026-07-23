@@ -1,1110 +1,1194 @@
 {
   "corpus_prior_version": "corpus-prior@1.0.0",
   "generated_from": {
-    "corpus_dir_basename": "flat",
-    "books": 275,
-    "spans": 19941,
+    "corpus_dir_basename": "corpus_consolidated_full",
+    "books": 296,
+    "spans": 22078,
     "max_sentences_per_book": 200,
     "per_book": [
       {
-        "file": "ccel__anselm__basic_works.txt",
-        "spans": 97
-      },
-      {
-        "file": "ccel__aquinas__summa.txt",
-        "spans": 99
-      },
-      {
-        "file": "ccel__athanasius__incarnation.txt",
-        "spans": 93
-      },
-      {
-        "file": "ccel__augustine__city.txt",
-        "spans": 87
-      },
-      {
-        "file": "ccel__augustine__confess.txt",
-        "spans": 95
-      },
-      {
-        "file": "ccel__bunyan__pilgrim.txt",
-        "spans": 98
-      },
-      {
-        "file": "ccel__kempis__imitation.txt",
-        "spans": 93
-      },
-      {
-        "file": "diverse__book_de_kafka.txt",
+        "file": "diverse_corpus__book_de_kafka.txt",
         "spans": 200
       },
       {
-        "file": "diverse__book_es_quijote.txt",
+        "file": "diverse_corpus__book_es_quijote.txt",
         "spans": 200
       },
       {
-        "file": "diverse__book_fi_kalevala.txt",
+        "file": "diverse_corpus__book_fi_kalevala.txt",
         "spans": 200
       },
       {
-        "file": "diverse__book_fr_verne.txt",
+        "file": "diverse_corpus__book_fr_verne.txt",
         "spans": 200
       },
       {
-        "file": "folger__a-midsummer-nights-dream_TXT_FolgerShakespeare.txt",
+        "file": "gutenberg_corpus__pg13434.txt",
         "spans": 200
       },
       {
-        "file": "folger__alls-well-that-ends-well_TXT_FolgerShakespeare.txt",
+        "file": "gutenberg_corpus__pg1396.txt",
         "spans": 200
       },
       {
-        "file": "folger__antony-and-cleopatra_TXT_FolgerShakespeare.txt",
+        "file": "gutenberg_corpus__pg18578.txt",
         "spans": 200
       },
       {
-        "file": "folger__as-you-like-it_TXT_FolgerShakespeare.txt",
+        "file": "gutenberg_corpus__pg18986.txt",
         "spans": 200
       },
       {
-        "file": "folger__coriolanus_TXT_FolgerShakespeare.txt",
+        "file": "gutenberg_corpus__pg19273.txt",
         "spans": 200
       },
       {
-        "file": "folger__cymbeline_TXT_FolgerShakespeare.txt",
+        "file": "gutenberg_corpus__pg21575.txt",
         "spans": 200
       },
       {
-        "file": "folger__hamlet_TXT_FolgerShakespeare.txt",
+        "file": "gutenberg_corpus__pg22153.txt",
         "spans": 200
       },
       {
-        "file": "folger__henry-iv-part-1_TXT_FolgerShakespeare.txt",
+        "file": "gutenberg_corpus__pg25982.txt",
         "spans": 200
       },
       {
-        "file": "folger__henry-iv-part-2_TXT_FolgerShakespeare.txt",
+        "file": "gutenberg_corpus__pg32322.txt",
         "spans": 200
       },
       {
-        "file": "folger__henry-v_TXT_FolgerShakespeare.txt",
+        "file": "gutenberg_corpus__pg41286.txt",
         "spans": 200
       },
       {
-        "file": "folger__henry-vi-part-1_TXT_FolgerShakespeare.txt",
+        "file": "gutenberg_corpus__pg50903.txt",
         "spans": 200
       },
       {
-        "file": "folger__henry-vi-part-2_TXT_FolgerShakespeare.txt",
+        "file": "gutenberg_corpus__pg59402.txt",
         "spans": 200
       },
       {
-        "file": "folger__henry-vi-part-3_TXT_FolgerShakespeare.txt",
+        "file": "gutenberg_corpus__pg70623.txt",
         "spans": 200
       },
       {
-        "file": "folger__henry-viii_TXT_FolgerShakespeare.txt",
+        "file": "gutenberg_corpus__pg70656.txt",
         "spans": 200
       },
       {
-        "file": "folger__julius-caesar_TXT_FolgerShakespeare.txt",
+        "file": "gutenberg_corpus__pg74409.txt",
         "spans": 200
       },
       {
-        "file": "folger__king-john_TXT_FolgerShakespeare.txt",
+        "file": "gutenberg_corpus__pg857.txt",
         "spans": 200
       },
       {
-        "file": "folger__king-lear_TXT_FolgerShakespeare.txt",
+        "file": "holy_texts_corpus__greek_nt__nestle1904__morph__parsing.txt",
+        "spans": 119
+      },
+      {
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgnt__text__1Cor.txt",
         "spans": 200
       },
       {
-        "file": "folger__loves-labors-lost_TXT_FolgerShakespeare.txt",
-        "spans": 200
-      },
-      {
-        "file": "folger__lucrece_TXT_FolgerShakespeare.txt",
-        "spans": 200
-      },
-      {
-        "file": "folger__macbeth_TXT_FolgerShakespeare.txt",
-        "spans": 200
-      },
-      {
-        "file": "folger__measure-for-measure_TXT_FolgerShakespeare.txt",
-        "spans": 200
-      },
-      {
-        "file": "folger__much-ado-about-nothing_TXT_FolgerShakespeare.txt",
-        "spans": 200
-      },
-      {
-        "file": "folger__othello_TXT_FolgerShakespeare.txt",
-        "spans": 200
-      },
-      {
-        "file": "folger__pericles_TXT_FolgerShakespeare.txt",
-        "spans": 200
-      },
-      {
-        "file": "folger__richard-ii_TXT_FolgerShakespeare.txt",
-        "spans": 200
-      },
-      {
-        "file": "folger__richard-iii_TXT_FolgerShakespeare.txt",
-        "spans": 200
-      },
-      {
-        "file": "folger__romeo-and-juliet_TXT_FolgerShakespeare.txt",
-        "spans": 200
-      },
-      {
-        "file": "folger__shakespeares-sonnets_TXT_FolgerShakespeare.txt",
-        "spans": 200
-      },
-      {
-        "file": "folger__the-comedy-of-errors_TXT_FolgerShakespeare.txt",
-        "spans": 200
-      },
-      {
-        "file": "folger__the-merchant-of-venice_TXT_FolgerShakespeare.txt",
-        "spans": 200
-      },
-      {
-        "file": "folger__the-merry-wives-of-windsor_TXT_FolgerShakespeare.txt",
-        "spans": 200
-      },
-      {
-        "file": "folger__the-phoenix-and-turtle_TXT_FolgerShakespeare.txt",
-        "spans": 24
-      },
-      {
-        "file": "folger__the-taming-of-the-shrew_TXT_FolgerShakespeare.txt",
-        "spans": 200
-      },
-      {
-        "file": "folger__the-tempest_TXT_FolgerShakespeare.txt",
-        "spans": 200
-      },
-      {
-        "file": "folger__the-two-gentlemen-of-verona_TXT_FolgerShakespeare.txt",
-        "spans": 200
-      },
-      {
-        "file": "folger__the-two-noble-kinsmen_TXT_FolgerShakespeare.txt",
-        "spans": 200
-      },
-      {
-        "file": "folger__the-winters-tale_TXT_FolgerShakespeare.txt",
-        "spans": 200
-      },
-      {
-        "file": "folger__timon-of-athens_TXT_FolgerShakespeare.txt",
-        "spans": 200
-      },
-      {
-        "file": "folger__titus-andronicus_TXT_FolgerShakespeare.txt",
-        "spans": 200
-      },
-      {
-        "file": "folger__troilus-and-cressida_TXT_FolgerShakespeare.txt",
-        "spans": 200
-      },
-      {
-        "file": "folger__twelfth-night_TXT_FolgerShakespeare.txt",
-        "spans": 200
-      },
-      {
-        "file": "folger__venus-and-adonis_TXT_FolgerShakespeare.txt",
-        "spans": 200
-      },
-      {
-        "file": "greek_nt__sblgnt__data__sblgnt__text__1Cor.txt",
-        "spans": 200
-      },
-      {
-        "file": "greek_nt__sblgnt__data__sblgnt__text__1John.txt",
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgnt__text__1John.txt",
         "spans": 78
       },
       {
-        "file": "greek_nt__sblgnt__data__sblgnt__text__1Pet.txt",
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgnt__text__1Pet.txt",
         "spans": 39
       },
       {
-        "file": "greek_nt__sblgnt__data__sblgnt__text__1Thess.txt",
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgnt__text__1Thess.txt",
         "spans": 36
       },
       {
-        "file": "greek_nt__sblgnt__data__sblgnt__text__1Tim.txt",
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgnt__text__1Tim.txt",
         "spans": 46
       },
       {
-        "file": "greek_nt__sblgnt__data__sblgnt__text__2Cor.txt",
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgnt__text__2Cor.txt",
         "spans": 134
       },
       {
-        "file": "greek_nt__sblgnt__data__sblgnt__text__2John.txt",
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgnt__text__2John.txt",
         "spans": 0
       },
       {
-        "file": "greek_nt__sblgnt__data__sblgnt__text__2Pet.txt",
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgnt__text__2Pet.txt",
         "spans": 13
       },
       {
-        "file": "greek_nt__sblgnt__data__sblgnt__text__2Thess.txt",
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgnt__text__2Thess.txt",
         "spans": 10
       },
       {
-        "file": "greek_nt__sblgnt__data__sblgnt__text__2Tim.txt",
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgnt__text__2Tim.txt",
         "spans": 32
       },
       {
-        "file": "greek_nt__sblgnt__data__sblgnt__text__3John.txt",
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgnt__text__3John.txt",
         "spans": 1
       },
       {
-        "file": "greek_nt__sblgnt__data__sblgnt__text__Acts.txt",
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgnt__text__Acts.txt",
         "spans": 200
       },
       {
-        "file": "greek_nt__sblgnt__data__sblgnt__text__Col.txt",
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgnt__text__Col.txt",
         "spans": 24
       },
       {
-        "file": "greek_nt__sblgnt__data__sblgnt__text__Eph.txt",
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgnt__text__Eph.txt",
         "spans": 40
       },
       {
-        "file": "greek_nt__sblgnt__data__sblgnt__text__Gal.txt",
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgnt__text__Gal.txt",
         "spans": 78
       },
       {
-        "file": "greek_nt__sblgnt__data__sblgnt__text__Heb.txt",
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgnt__text__Heb.txt",
         "spans": 134
       },
       {
-        "file": "greek_nt__sblgnt__data__sblgnt__text__Jas.txt",
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgnt__text__Jas.txt",
         "spans": 60
       },
       {
-        "file": "greek_nt__sblgnt__data__sblgnt__text__John.txt",
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgnt__text__John.txt",
         "spans": 200
       },
       {
-        "file": "greek_nt__sblgnt__data__sblgnt__text__Jude.txt",
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgnt__text__Jude.txt",
         "spans": 2
       },
       {
-        "file": "greek_nt__sblgnt__data__sblgnt__text__Luke.txt",
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgnt__text__Luke.txt",
         "spans": 200
       },
       {
-        "file": "greek_nt__sblgnt__data__sblgnt__text__Mark.txt",
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgnt__text__Mark.txt",
         "spans": 200
       },
       {
-        "file": "greek_nt__sblgnt__data__sblgnt__text__Matt.txt",
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgnt__text__Matt.txt",
         "spans": 200
       },
       {
-        "file": "greek_nt__sblgnt__data__sblgnt__text__Phil.txt",
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgnt__text__Phil.txt",
         "spans": 40
       },
       {
-        "file": "greek_nt__sblgnt__data__sblgnt__text__Phlm.txt",
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgnt__text__Phlm.txt",
         "spans": 0
       },
       {
-        "file": "greek_nt__sblgnt__data__sblgnt__text__Rev.txt",
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgnt__text__Rev.txt",
         "spans": 200
       },
       {
-        "file": "greek_nt__sblgnt__data__sblgnt__text__Rom.txt",
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgnt__text__Rom.txt",
         "spans": 200
       },
       {
-        "file": "greek_nt__sblgnt__data__sblgnt__text__Titus.txt",
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgnt__text__Titus.txt",
         "spans": 13
       },
       {
-        "file": "gutenberg__pg12842.txt",
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgntapp__text__1Cor.txt",
         "spans": 200
       },
       {
-        "file": "gutenberg__pg12983.txt",
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgntapp__text__1John.txt",
+        "spans": 86
+      },
+      {
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgntapp__text__1Pet.txt",
+        "spans": 106
+      },
+      {
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgntapp__text__1Thess.txt",
+        "spans": 62
+      },
+      {
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgntapp__text__1Tim.txt",
+        "spans": 58
+      },
+      {
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgntapp__text__2Cor.txt",
         "spans": 200
       },
       {
-        "file": "gutenberg__pg15359.txt",
-        "spans": 200
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgntapp__text__2John.txt",
+        "spans": 4
       },
       {
-        "file": "gutenberg__pg18781.txt",
-        "spans": 200
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgntapp__text__2Pet.txt",
+        "spans": 50
       },
       {
-        "file": "gutenberg__pg20381.txt",
-        "spans": 200
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgntapp__text__2Thess.txt",
+        "spans": 30
       },
       {
-        "file": "gutenberg__pg26900.txt",
-        "spans": 200
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgntapp__text__2Tim.txt",
+        "spans": 50
       },
       {
-        "file": "gutenberg__pg27394.txt",
-        "spans": 200
-      },
-      {
-        "file": "gutenberg__pg27683.txt",
-        "spans": 200
-      },
-      {
-        "file": "gutenberg__pg31765.txt",
-        "spans": 200
-      },
-      {
-        "file": "gutenberg__pg37281.txt",
-        "spans": 200
-      },
-      {
-        "file": "gutenberg__pg39964.txt",
-        "spans": 200
-      },
-      {
-        "file": "gutenberg__pg42657.txt",
-        "spans": 200
-      },
-      {
-        "file": "gutenberg__pg44632.txt",
-        "spans": 200
-      },
-      {
-        "file": "gutenberg__pg5320.txt",
-        "spans": 200
-      },
-      {
-        "file": "gutenberg__pg55846.txt",
-        "spans": 200
-      },
-      {
-        "file": "gutenberg__pg57100.txt",
-        "spans": 200
-      },
-      {
-        "file": "gutenberg__pg60541.txt",
-        "spans": 200
-      },
-      {
-        "file": "gutenberg__pg61186.txt",
-        "spans": 199
-      },
-      {
-        "file": "gutenberg__pg62859.txt",
-        "spans": 200
-      },
-      {
-        "file": "gutenberg__pg63517.txt",
-        "spans": 200
-      },
-      {
-        "file": "gutenberg__pg64462.txt",
-        "spans": 200
-      },
-      {
-        "file": "gutenberg__pg65872.txt",
-        "spans": 200
-      },
-      {
-        "file": "gutenberg__pg68149.txt",
-        "spans": 200
-      },
-      {
-        "file": "gutenberg__pg69818.txt",
-        "spans": 200
-      },
-      {
-        "file": "gutenberg__pg69958.txt",
-        "spans": 200
-      },
-      {
-        "file": "gutenberg__pg73047.txt",
-        "spans": 200
-      },
-      {
-        "file": "gutenberg__pg74999.txt",
-        "spans": 200
-      },
-      {
-        "file": "gutenberg__pg77319.txt",
-        "spans": 200
-      },
-      {
-        "file": "gutenberg__pg78613.txt",
-        "spans": 154
-      },
-      {
-        "file": "journalism__baker_following_color_line.txt",
-        "spans": 200
-      },
-      {
-        "file": "journalism__bly_ten_days_madhouse.txt",
-        "spans": 200
-      },
-      {
-        "file": "journalism__reed_ten_days_shook_world.txt",
-        "spans": 200
-      },
-      {
-        "file": "journalism__riis_how_other_half_lives.txt",
-        "spans": 200
-      },
-      {
-        "file": "journalism__sinclair_the_jungle.txt",
-        "spans": 200
-      },
-      {
-        "file": "journalism__steffens_shame_of_cities.txt",
-        "spans": 200
-      },
-      {
-        "file": "journalism__tarbell_standard_oil.txt",
-        "spans": 200
-      },
-      {
-        "file": "latin_library__about.html__about.html.txt",
-        "spans": 9
-      },
-      {
-        "file": "latin_library__ammianus__ammianus.txt",
-        "spans": 7
-      },
-      {
-        "file": "latin_library__apuleius__apuleius.txt",
-        "spans": 8
-      },
-      {
-        "file": "latin_library__caes__caes.txt",
-        "spans": 21
-      },
-      {
-        "file": "latin_library__caesar__caesar.txt",
-        "spans": 1
-      },
-      {
-        "file": "latin_library__catullus.shtml__catullus.shtml.txt",
-        "spans": 200
-      },
-      {
-        "file": "latin_library__catullus__catullus.txt",
-        "spans": 13
-      },
-      {
-        "file": "latin_library__christian.html__christian.html.txt",
-        "spans": 48
-      },
-      {
-        "file": "latin_library__cicero__cicero.txt",
-        "spans": 32
-      },
-      {
-        "file": "latin_library__claudian.html__claudian.html.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__001-Al-Faatiha.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__002-Al-Baqara.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__003-Aal-i-Imraan.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__004-An-Nisaa.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__005-Al-Maaida.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__006-Al-An'aam.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__007-Al-A'raaf.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__008-Al-Anfaal.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__009-At-Tawba.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__010-Yunus.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__011-Hud.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__012-Yusuf.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__013-Ar-Ra'd.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__014-Ibrahim.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__015-Al-Hijr.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__016-An-Nahl.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__017-Al-Israa.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__018-Al-Kahf.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__019-Maryam.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__020-Taa-Haa.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__021-Al-Anbiyaa.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__022-Al-Hajj.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__023-Al-Muminoon.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__024-An-Noor.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__025-Al-Furqaan.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__026-Ash-Shu'araa.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__027-An-Naml.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__028-Al-Qasas.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__029-Al-Ankaboot.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__030-Ar-Room.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__031-Luqman.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__032-As-Sajda.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__033-Al-Ahzaab.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__034-Saba.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__035-Faatir.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__036-Yaseen.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__037-As-Saaffaat.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__038-Saad.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__039-Az-Zumar.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__040-Ghafir.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__041-Fussilat.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__042-Ash-Shura.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__043-Az-Zukhruf.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__044-Ad-Dukhaan.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__045-Al-Jaathiya.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__046-Al-Ahqaf.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__047-Muhammad.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__048-Al-Fath.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__049-Al-Hujuraat.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__050-Qaaf.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__051-Adh-Dhaariyat.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__052-At-Tur.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__053-An-Najm.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__054-Al-Qamar.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__055-Ar-Rahmaan.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__056-Al-Waaqia.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__057-Al-Hadid.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__058-Al-Mujaadila.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__059-Al-Hashr.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__060-Al-Mumtahana.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__061-As-Saff.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__062-Al-Jumu'a.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__063-Al-Munaafiqoon.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__064-At-Taghaabun.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__065-At-Talaaq.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__066-At-Tahrim.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__067-Al-Mulk.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__068-Al-Qalam.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__069-Al-Haaqqa.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__070-Al-Ma'aarij.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__071-Nooh.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__072-Al-Jinn.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__073-Al-Muzzammil.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__074-Al-Muddaththir.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__075-Al-Qiyaama.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__076-Al-Insaan.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__077-Al-Mursalaat.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__078-An-Naba.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__079-An-Naazi'aat.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__080-Abasa.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__081-At-Takwir.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__082-Al-Infitaar.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__083-Al-Mutaffifin.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__084-Al-Inshiqaaq.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__085-Al-Burooj.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__086-At-Taariq.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__087-Al-A'laa.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__088-Al-Ghaashiya.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__089-Al-Fajr.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__090-Al-Balad.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__091-Ash-Shams.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__092-Al-Lail.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__093-Ad-Dhuhaa.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__094-Ash-Sharh.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__095-At-Tin.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__096-Al-Alaq.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__097-Al-Qadr.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__098-Al-Bayyina.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__099-Az-Zalzala.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__100-Al-Aadiyaat.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__101-Al-Qaari'a.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__102-At-Takaathur.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__104-Al-Humaza.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__105-Al-Fil.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__106-Quraish.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__107-Al-Maa'un.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__109-Al-Kaafiroon.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__110-An-Nasr.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__111-Al-Masad.txt",
-        "spans": 0
-      },
-      {
-        "file": "quran__114-An-Naas.txt",
-        "spans": 0
-      },
-      {
-        "file": "tanakh__Amos.txt",
-        "spans": 1
-      },
-      {
-        "file": "tanakh__Daniel.txt",
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgntapp__text__3John.txt",
         "spans": 2
       },
       {
-        "file": "tanakh__Deuteronomy.txt",
-        "spans": 22
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgntapp__text__Acts.txt",
+        "spans": 200
       },
       {
-        "file": "tanakh__Ecclesiastes.txt",
-        "spans": 5
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgntapp__text__Col.txt",
+        "spans": 86
       },
       {
-        "file": "tanakh__Esther.txt",
-        "spans": 5
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgntapp__text__Eph.txt",
+        "spans": 126
       },
       {
-        "file": "tanakh__Exodus.txt",
-        "spans": 2
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgntapp__text__Gal.txt",
+        "spans": 116
       },
       {
-        "file": "tanakh__Ezekiel.txt",
-        "spans": 24
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgntapp__text__Heb.txt",
+        "spans": 200
       },
       {
-        "file": "tanakh__Ezra.txt",
-        "spans": 0
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgntapp__text__Jas.txt",
+        "spans": 98
       },
       {
-        "file": "tanakh__Genesis.txt",
-        "spans": 17
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgntapp__text__John.txt",
+        "spans": 200
       },
       {
-        "file": "tanakh__Habakkuk.txt",
-        "spans": 7
-      },
-      {
-        "file": "tanakh__Haggai.txt",
-        "spans": 0
-      },
-      {
-        "file": "tanakh__Hosea.txt",
-        "spans": 0
-      },
-      {
-        "file": "tanakh__II_Chronicles.txt",
-        "spans": 0
-      },
-      {
-        "file": "tanakh__II_Kings.txt",
-        "spans": 3
-      },
-      {
-        "file": "tanakh__II_Samuel.txt",
-        "spans": 11
-      },
-      {
-        "file": "tanakh__I_Chronicles.txt",
-        "spans": 40
-      },
-      {
-        "file": "tanakh__I_Kings.txt",
-        "spans": 28
-      },
-      {
-        "file": "tanakh__I_Samuel.txt",
-        "spans": 21
-      },
-      {
-        "file": "tanakh__Isaiah.txt",
-        "spans": 23
-      },
-      {
-        "file": "tanakh__Jeremiah.txt",
-        "spans": 8
-      },
-      {
-        "file": "tanakh__Job.txt",
-        "spans": 2
-      },
-      {
-        "file": "tanakh__Joel.txt",
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgntapp__text__Jude.txt",
         "spans": 12
       },
       {
-        "file": "tanakh__Jonah.txt",
-        "spans": 4
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgntapp__text__Luke.txt",
+        "spans": 200
       },
       {
-        "file": "tanakh__Joshua.txt",
-        "spans": 2
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgntapp__text__Mark.txt",
+        "spans": 200
       },
       {
-        "file": "tanakh__Judges.txt",
-        "spans": 23
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgntapp__text__Matt.txt",
+        "spans": 200
       },
       {
-        "file": "tanakh__Lamentations.txt",
-        "spans": 21
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgntapp__text__Phil.txt",
+        "spans": 58
       },
       {
-        "file": "tanakh__Leviticus.txt",
-        "spans": 3
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgntapp__text__Phlm.txt",
+        "spans": 14
       },
       {
-        "file": "tanakh__Malachi.txt",
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgntapp__text__Rev.txt",
+        "spans": 200
+      },
+      {
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgntapp__text__Rom.txt",
+        "spans": 200
+      },
+      {
+        "file": "holy_texts_corpus__greek_nt__sblgnt__data__sblgntapp__text__Titus.txt",
+        "spans": 24
+      },
+      {
+        "file": "holy_texts_corpus__quran__001-Al-Faatiha.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__002-Al-Baqara.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__003-Aal-i-Imraan.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__004-An-Nisaa.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__005-Al-Maaida.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__006-Al-An'aam.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__007-Al-A'raaf.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__008-Al-Anfaal.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__009-At-Tawba.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__010-Yunus.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__011-Hud.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__012-Yusuf.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__013-Ar-Ra'd.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__014-Ibrahim.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__015-Al-Hijr.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__016-An-Nahl.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__017-Al-Israa.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__018-Al-Kahf.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__019-Maryam.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__020-Taa-Haa.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__021-Al-Anbiyaa.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__022-Al-Hajj.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__023-Al-Muminoon.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__024-An-Noor.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__025-Al-Furqaan.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__026-Ash-Shu'araa.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__027-An-Naml.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__028-Al-Qasas.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__029-Al-Ankaboot.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__030-Ar-Room.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__031-Luqman.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__032-As-Sajda.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__033-Al-Ahzaab.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__034-Saba.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__035-Faatir.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__036-Yaseen.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__037-As-Saaffaat.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__038-Saad.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__039-Az-Zumar.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__040-Ghafir.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__041-Fussilat.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__042-Ash-Shura.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__043-Az-Zukhruf.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__044-Ad-Dukhaan.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__045-Al-Jaathiya.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__046-Al-Ahqaf.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__047-Muhammad.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__048-Al-Fath.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__049-Al-Hujuraat.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__050-Qaaf.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__051-Adh-Dhaariyat.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__052-At-Tur.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__053-An-Najm.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__054-Al-Qamar.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__055-Ar-Rahmaan.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__056-Al-Waaqia.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__057-Al-Hadid.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__058-Al-Mujaadila.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__059-Al-Hashr.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__060-Al-Mumtahana.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__061-As-Saff.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__062-Al-Jumu'a.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__063-Al-Munaafiqoon.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__064-At-Taghaabun.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__065-At-Talaaq.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__066-At-Tahrim.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__067-Al-Mulk.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__068-Al-Qalam.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__069-Al-Haaqqa.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__070-Al-Ma'aarij.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__071-Nooh.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__072-Al-Jinn.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__073-Al-Muzzammil.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__074-Al-Muddaththir.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__075-Al-Qiyaama.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__076-Al-Insaan.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__077-Al-Mursalaat.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__078-An-Naba.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__079-An-Naazi'aat.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__080-Abasa.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__081-At-Takwir.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__082-Al-Infitaar.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__083-Al-Mutaffifin.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__084-Al-Inshiqaaq.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__085-Al-Burooj.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__086-At-Taariq.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__087-Al-A'laa.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__088-Al-Ghaashiya.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__089-Al-Fajr.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__090-Al-Balad.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__091-Ash-Shams.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__092-Al-Lail.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__093-Ad-Dhuhaa.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__094-Ash-Sharh.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__095-At-Tin.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__096-Al-Alaq.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__097-Al-Qadr.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__098-Al-Bayyina.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__099-Az-Zalzala.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__100-Al-Aadiyaat.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__101-Al-Qaari'a.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__102-At-Takaathur.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__104-Al-Humaza.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__105-Al-Fil.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__106-Quraish.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__107-Al-Maa'un.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__109-Al-Kaafiroon.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__110-An-Nasr.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__111-Al-Masad.txt",
+        "spans": 0
+      },
+      {
+        "file": "holy_texts_corpus__quran__114-An-Naas.txt",
+        "spans": 0
+      },
+      {
+        "file": "journalism_corpus__baker_following_color_line.txt",
+        "spans": 200
+      },
+      {
+        "file": "journalism_corpus__bly_ten_days_madhouse.txt",
+        "spans": 200
+      },
+      {
+        "file": "journalism_corpus__reed_ten_days_shook_world.txt",
+        "spans": 200
+      },
+      {
+        "file": "journalism_corpus__riis_how_other_half_lives.txt",
+        "spans": 200
+      },
+      {
+        "file": "journalism_corpus__sinclair_the_jungle.txt",
+        "spans": 200
+      },
+      {
+        "file": "journalism_corpus__steffens_shame_of_cities.txt",
+        "spans": 200
+      },
+      {
+        "file": "journalism_corpus__tarbell_standard_oil.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__a-midsummer-nights-dream_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__alls-well-that-ends-well_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__antony-and-cleopatra_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__as-you-like-it_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__coriolanus_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__cymbeline_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__hamlet_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__henry-iv-part-1_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__henry-iv-part-2_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__henry-v_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__henry-vi-part-1_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__henry-vi-part-2_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__henry-vi-part-3_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__henry-viii_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__julius-caesar_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__king-john_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__king-lear_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__loves-labors-lost_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__lucrece_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__macbeth_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__measure-for-measure_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__much-ado-about-nothing_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__othello_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__pericles_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__richard-ii_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__richard-iii_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__romeo-and-juliet_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__shakespeares-sonnets_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__the-comedy-of-errors_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__the-merchant-of-venice_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__the-merry-wives-of-windsor_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__the-phoenix-and-turtle_TXT_FolgerShakespeare.txt",
+        "spans": 24
+      },
+      {
+        "file": "shakespeare_corpus__folger__the-taming-of-the-shrew_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__the-tempest_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__the-two-gentlemen-of-verona_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__the-two-noble-kinsmen_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__the-winters-tale_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__timon-of-athens_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__titus-andronicus_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__troilus-and-cressida_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__twelfth-night_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "shakespeare_corpus__folger__venus-and-adonis_TXT_FolgerShakespeare.txt",
+        "spans": 200
+      },
+      {
+        "file": "western_canon_corpus__ccel__anselm__basic_works.txt",
+        "spans": 97
+      },
+      {
+        "file": "western_canon_corpus__ccel__aquinas__summa.txt",
+        "spans": 99
+      },
+      {
+        "file": "western_canon_corpus__ccel__athanasius__incarnation.txt",
+        "spans": 93
+      },
+      {
+        "file": "western_canon_corpus__ccel__augustine__city.txt",
+        "spans": 87
+      },
+      {
+        "file": "western_canon_corpus__ccel__augustine__confess.txt",
+        "spans": 95
+      },
+      {
+        "file": "western_canon_corpus__ccel__bunyan__pilgrim.txt",
+        "spans": 98
+      },
+      {
+        "file": "western_canon_corpus__ccel__kempis__imitation.txt",
+        "spans": 93
+      },
+      {
+        "file": "western_canon_corpus__latin_library__about.html__about.html.txt",
         "spans": 9
       },
       {
-        "file": "tanakh__Micah.txt",
-        "spans": 10
-      },
-      {
-        "file": "tanakh__Nahum.txt",
-        "spans": 6
-      },
-      {
-        "file": "tanakh__Nehemiah.txt",
-        "spans": 0
-      },
-      {
-        "file": "tanakh__Numbers.txt",
-        "spans": 23
-      },
-      {
-        "file": "tanakh__Obadiah.txt",
-        "spans": 16
-      },
-      {
-        "file": "tanakh__Proverbs.txt",
-        "spans": 4
-      },
-      {
-        "file": "tanakh__Psalms.txt",
-        "spans": 0
-      },
-      {
-        "file": "tanakh__Ruth.txt",
-        "spans": 16
-      },
-      {
-        "file": "tanakh__Song_of_Songs.txt",
+        "file": "western_canon_corpus__latin_library__ammianus__ammianus.txt",
         "spans": 7
       },
       {
-        "file": "tanakh__Zechariah.txt",
+        "file": "western_canon_corpus__latin_library__apuleius__apuleius.txt",
+        "spans": 8
+      },
+      {
+        "file": "western_canon_corpus__latin_library__caes__caes.txt",
+        "spans": 21
+      },
+      {
+        "file": "western_canon_corpus__latin_library__caesar__caesar.txt",
         "spans": 1
       },
       {
-        "file": "tanakh__Zephaniah.txt",
+        "file": "western_canon_corpus__latin_library__catullus.shtml__catullus.shtml.txt",
+        "spans": 200
+      },
+      {
+        "file": "western_canon_corpus__latin_library__catullus__catullus.txt",
+        "spans": 13
+      },
+      {
+        "file": "western_canon_corpus__latin_library__christian.html__christian.html.txt",
+        "spans": 48
+      },
+      {
+        "file": "western_canon_corpus__latin_library__cicero__cicero.txt",
+        "spans": 32
+      },
+      {
+        "file": "western_canon_corpus__latin_library__claudian.html__claudian.html.txt",
+        "spans": 0
+      },
+      {
+        "file": "western_canon_corpus__latin_library__cred.html__cred.html.txt",
+        "spans": 200
+      },
+      {
+        "file": "western_canon_corpus__latin_library__enn.html__enn.html.txt",
+        "spans": 127
+      },
+      {
+        "file": "western_canon_corpus__latin_library__epubs.html__epubs.html.txt",
+        "spans": 48
+      },
+      {
+        "file": "western_canon_corpus__latin_library__frontinus.html__frontinus.html.txt",
+        "spans": 2
+      },
+      {
+        "file": "western_canon_corpus__latin_library__gellius.html__gellius.html.txt",
+        "spans": 12
+      },
+      {
+        "file": "western_canon_corpus__latin_library__historians__historians.txt",
+        "spans": 94
+      },
+      {
+        "file": "western_canon_corpus__latin_library__hor.html__hor.html.txt",
+        "spans": 3
+      },
+      {
+        "file": "western_canon_corpus__latin_library__imperialism_syllabus.html__syllabus.html.txt",
+        "spans": 114
+      },
+      {
+        "file": "western_canon_corpus__latin_library__indices.html__indices.html.txt",
+        "spans": 153
+      },
+      {
+        "file": "western_canon_corpus__latin_library__justin.html__justin.html.txt",
+        "spans": 35
+      },
+      {
+        "file": "western_canon_corpus__latin_library__juvenal.html__juvenal.html.txt",
         "spans": 5
+      },
+      {
+        "file": "western_canon_corpus__latin_library__law__law.txt",
+        "spans": 46
+      },
+      {
+        "file": "western_canon_corpus__latin_library__liv.html__liv.html.txt",
+        "spans": 26
+      },
+      {
+        "file": "western_canon_corpus__latin_library__livius__livybio.html.txt",
+        "spans": 67
+      },
+      {
+        "file": "western_canon_corpus__latin_library__ll1__ll1.txt",
+        "spans": 62
+      },
+      {
+        "file": "western_canon_corpus__latin_library__ll2__ll2.txt",
+        "spans": 71
+      },
+      {
+        "file": "western_canon_corpus__latin_library__martial.html__martial.html.txt",
+        "spans": 4
+      },
+      {
+        "file": "western_canon_corpus__latin_library__medieval.html__medieval.html.txt",
+        "spans": 68
+      },
+      {
+        "file": "western_canon_corpus__latin_library__misc.html__misc.html.txt",
+        "spans": 51
+      },
+      {
+        "file": "western_canon_corpus__latin_library__neo.html__neo.html.txt",
+        "spans": 57
+      },
+      {
+        "file": "western_canon_corpus__latin_library__nepos.html__nepos.html.txt",
+        "spans": 16
+      },
+      {
+        "file": "western_canon_corpus__latin_library__ovid.html__ovid.html.txt",
+        "spans": 73
+      },
+      {
+        "file": "western_canon_corpus__latin_library__persius.html__persius.html.txt",
+        "spans": 200
+      },
+      {
+        "file": "western_canon_corpus__latin_library__plautus.html__plautus.html.txt",
+        "spans": 11
+      },
+      {
+        "file": "western_canon_corpus__latin_library__pliny.html__pliny.html.txt",
+        "spans": 1
+      },
+      {
+        "file": "western_canon_corpus__latin_library__pliny1.html__pliny1.html.txt",
+        "spans": 28
+      },
+      {
+        "file": "western_canon_corpus__latin_library__quintilian.html__quintilian.html.txt",
+        "spans": 23
+      },
+      {
+        "file": "western_canon_corpus__latin_library__sall.html__sall.html.txt",
+        "spans": 2
+      },
+      {
+        "file": "western_canon_corpus__latin_library__sallust__chronology.html.txt",
+        "spans": 120
+      },
+      {
+        "file": "western_canon_corpus__latin_library__sallust__sallustbritannica.html.txt",
+        "spans": 39
+      },
+      {
+        "file": "western_canon_corpus__latin_library__satire__satire.txt",
+        "spans": 25
+      },
+      {
+        "file": "western_canon_corpus__latin_library__sen.html__sen.html.txt",
+        "spans": 38
+      },
+      {
+        "file": "western_canon_corpus__latin_library__seneca.html__seneca.html.txt",
+        "spans": 1
+      },
+      {
+        "file": "western_canon_corpus__latin_library__sha.html__sha.html.txt",
+        "spans": 18
+      },
+      {
+        "file": "western_canon_corpus__latin_library__silius.html__silius.html.txt",
+        "spans": 7
+      },
+      {
+        "file": "western_canon_corpus__latin_library__statius.html__statius.html.txt",
+        "spans": 11
+      },
+      {
+        "file": "western_canon_corpus__latin_library__suet.html__suet.html.txt",
+        "spans": 13
+      },
+      {
+        "file": "western_canon_corpus__latin_library__sulpicia.html__sulpicia.html.txt",
+        "spans": 12
+      },
+      {
+        "file": "western_canon_corpus__latin_library__tac.html__tac.html.txt",
+        "spans": 12
+      },
+      {
+        "file": "western_canon_corpus__latin_library__technical.html__technical.html.txt",
+        "spans": 3
+      },
+      {
+        "file": "western_canon_corpus__latin_library__valeriusflaccus.html__valeriusflaccus.html.txt",
+        "spans": 0
+      },
+      {
+        "file": "western_canon_corpus__latin_library__valmax.html__valmax.html.txt",
+        "spans": 0
+      },
+      {
+        "file": "western_canon_corpus__latin_library__varro.html__varro.html.txt",
+        "spans": 0
+      },
+      {
+        "file": "western_canon_corpus__latin_library__verg.html__verg.html.txt",
+        "spans": 18
+      },
+      {
+        "file": "western_canon_corpus__latin_library__virgil__virgil.txt",
+        "spans": 56
       }
     ]
   },
@@ -1113,31 +1197,31 @@
   "measurement_protocol": "eo-compression@1.0.0",
   "distribution_ppm": {
     "NUL_Clearing_Void": 1,
-    "NUL_Dissecting_Entity": 26611,
+    "NUL_Dissecting_Entity": 40281,
     "NUL_Unraveling_Kind": 1,
     "SEG_Clearing_Field": 1,
-    "SEG_Dissecting_Link": 48990,
+    "SEG_Dissecting_Link": 43663,
     "SEG_Unraveling_Network": 1,
     "DEF_Clearing_Atmosphere": 1,
-    "DEF_Dissecting_Lens": 15681,
+    "DEF_Dissecting_Lens": 12275,
     "DEF_Unraveling_Paradigm": 1,
     "SIG_Tending_Void": 1,
-    "SIG_Binding_Entity": 1995,
+    "SIG_Binding_Entity": 1932,
     "SIG_Tracing_Kind": 1,
     "CON_Tending_Field": 1,
-    "CON_Binding_Link": 103030,
+    "CON_Binding_Link": 88081,
     "CON_Tracing_Network": 1,
     "EVA_Tending_Atmosphere": 1,
-    "EVA_Binding_Lens": 368264,
+    "EVA_Binding_Lens": 375814,
     "EVA_Tracing_Paradigm": 1,
     "INS_Cultivating_Void": 1,
-    "INS_Making_Entity": 62180,
+    "INS_Making_Entity": 58396,
     "INS_Composing_Kind": 1,
     "SYN_Cultivating_Field": 1,
-    "SYN_Making_Link": 4968,
+    "SYN_Making_Link": 6161,
     "SYN_Composing_Network": 1,
     "REC_Cultivating_Atmosphere": 1,
-    "REC_Making_Lens": 368263,
+    "REC_Making_Lens": 373379,
     "REC_Composing_Paradigm": 1
   }
 }
