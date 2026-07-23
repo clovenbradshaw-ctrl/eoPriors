@@ -99,15 +99,48 @@ test('surprisal_bits and bayes_bits scale to integer micro-bits and reader_versi
   assert.ok(Number.isInteger(fold.bayes_bits));
 });
 
-test('reading ground channels cast real prior evidence onto Ground-grain cells', () => {
+// reading.ground's REAL shape, matching eoreader4.2's actual src/perceiver/reading.js output
+// (locked in by its own tests/smoke.test.js): nested { novelty: {mass}, bonds: {mass},
+// propositions: {mass} }, not the flat {novelty_ppm, field_ppm, atmosphere_ppm} this test used
+// to assert — that flat shape was never what eoreader4.2 produced, so this test was passing
+// against a fiction while groundEventsFor silently no-opped on every real reading (see the
+// comment above groundEventsFor). Regression-fixed: these fixtures now mirror the real shape.
+test('reading ground channels (real eoreader4.2 shape) cast prior evidence onto Ground-grain cells', () => {
   const doc = docWithLog([]);
   const reading = baseReading({
-    ground: { novelty_ppm: 100_000, field_ppm: 300_000, atmosphere_ppm: 600_000 },
+    ground: { novelty: { mass: 1 }, bonds: { mass: 3 }, propositions: { mass: 6 } },
   });
   const fold = readingToFold(doc, 3, reading);
-  assert.ok(fold.operator_events.some((e) => e.op === 'INS' && e.grain === 'Ground' && e.source === 'ground:novelty'));
-  assert.ok(fold.operator_events.some((e) => e.op === 'CON' && e.grain === 'Ground' && e.source === 'ground:field'));
-  assert.ok(fold.operator_events.some((e) => e.op === 'REC' && e.grain === 'Ground' && e.source === 'ground:atmosphere'));
+  const ground = fold.operator_events.filter((e) => e.grain === 'Ground');
+  assert.equal(ground.length, 3, 'all three Ground channels have nonzero mass, so all three fire');
+  const novelty = ground.find((e) => e.op === 'INS' && e.source === 'ground:novelty');
+  const field = ground.find((e) => e.op === 'CON' && e.source === 'ground:field');
+  const atmosphere = ground.find((e) => e.op === 'REC' && e.source === 'ground:atmosphere');
+  assert.ok(novelty && field && atmosphere);
+  // relative shares mirror the 1:3:6 input mass ratio, regardless of what else is in the fold
+  // (EVA always fires too — see readingToFold — but scales every event by the same factor).
+  assert.ok(field.weight_ppm > novelty.weight_ppm, 'field (mass 3) outweighs novelty (mass 1)');
+  assert.ok(atmosphere.weight_ppm > field.weight_ppm, 'atmosphere (mass 6) outweighs field (mass 3)');
   const total = fold.operator_events.reduce((s, e) => s + e.weight_ppm, 0);
   assert.equal(total, 1_000_000);
+});
+
+test('reading ground channels: a channel with zero mass does not fire, others still do', () => {
+  const doc = docWithLog([]);
+  const reading = baseReading({
+    ground: { novelty: { mass: 1 }, bonds: { mass: 0 }, propositions: { mass: 4 } },
+  });
+  const fold = readingToFold(doc, 3, reading);
+  const ground = fold.operator_events.filter((e) => e.grain === 'Ground');
+  assert.equal(ground.length, 2, 'the zero-mass bond channel is omitted, not emitted as a zero-weight event');
+  assert.ok(!ground.some((e) => e.source === 'ground:field'));
+});
+
+test('reading ground channels: all-zero ground mass admits no Ground events at all', () => {
+  const doc = docWithLog([]);
+  const reading = baseReading({
+    ground: { novelty: { mass: 0 }, bonds: { mass: 0 }, propositions: { mass: 0 } },
+  });
+  const fold = readingToFold(doc, 3, reading);
+  assert.ok(fold.operator_events.every((e) => e.grain !== 'Ground'));
 });
