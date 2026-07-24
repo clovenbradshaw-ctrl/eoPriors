@@ -3,7 +3,7 @@
   "$id": "prior-snapshot.schema.json",
   "title": "PriorSnapshot@1",
   "type": "object",
-  "required": ["schema", "snapshot_id", "spec_version", "operator_epoch", "engine_compatibility", "scope", "packs", "governance_head", "build", "rights_manifest_id"],
+  "required": ["schema", "snapshot_id", "spec_version", "operator_epoch", "engine_compatibility", "scope", "channels", "packs", "governance_head", "build", "rights_manifest_id"],
   "properties": {
     "schema": { "const": "PriorSnapshot@1" },
     "snapshot_id": { "type": "string", "pattern": "^prior:sha256:[0-9a-f]{64}$" },
@@ -11,6 +11,7 @@
     "operator_epoch": { "type": "string", "pattern": "^eo-\\d{4}-\\d{2}$" },
     "engine_compatibility": { "type": "string", "minLength": 1, "not": { "pattern": "latest" } },
     "scope": { "$ref": "#/$defs/scope" },
+    "channels": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["priorMass", "priorBond", "priorProp", "referent-role"] } },
     "packs": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/packRef" } },
     "governance_head": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^event:sha256:[0-9a-f]{64}$" } },
     "build": {

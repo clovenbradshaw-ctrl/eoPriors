@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "role-expectation.schema.json",
+  "title": "RoleExpectation@1",
+  "description": "Distribution-only referent-role expectation channel payload. Rows are keyed by exemplar id, never by referent names or source text; all fractional measurements are integer parts-per-million values for deterministic hashing.",
+  "type": "object",
+  "required": ["schema", "basis_id", "operator_epoch", "content_hash", "pocket", "reader_version", "expectations", "null_samples", "readiness", "ballast"],
+  "properties": {
+    "schema": { "const": "RoleExpectation@1" },
+    "basis_id": { "$ref": "pack-common.schema.json#/$defs/basisId" },
+    "operator_epoch": { "type": "string", "pattern": "^eo-\\d{4}-\\d{2}$" },
+    "content_hash": { "$ref": "pack-common.schema.json#/$defs/sha256" },
+    "reader_version": { "type": "string", "pattern": "^[a-z0-9.-]+@\\d+\\.\\d+\\.\\d+$", "not": { "pattern": "latest" } },
+    "pocket": {
+      "type": "object",
+      "required": ["id", "version", "n_sources", "date_range"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^pocket:[a-z0-9][a-z0-9._:-]*$" },
+        "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "n_sources": { "type": "integer", "minimum": 1 },
+        "date_range": { "type": "array", "prefixItems": [{ "type": "string", "format": "date" }, { "type": "string", "format": "date" }], "items": false, "minItems": 2, "maxItems": 2 }
+      },
+      "additionalProperties": false
+    },
+    "expectations": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/expectation" } },
+    "null_samples": {
+      "type": "object",
+      "required": ["attributive_share", "coupling_dispersion", "relative_mass"],
+      "properties": {
+        "attributive_share": { "$ref": "#/$defs/ppmSamples" },
+        "coupling_dispersion": { "$ref": "#/$defs/ppmSamples" },
+        "relative_mass": { "$ref": "#/$defs/ppmSamples" }
+      },
+      "additionalProperties": false
+    },
+    "readiness": {
+      "type": "object",
+      "required": ["min_n_per_exemplar", "good_turing_singleton_rate_ppm", "apparatus_rate_heldout_delta_ppm", "derive_null_tolerance_ppm", "ready"],
+      "properties": {
+        "min_n_per_exemplar": { "type": "integer", "minimum": 1 },
+        "good_turing_singleton_rate_ppm": { "$ref": "#/$defs/ppm" },
+        "apparatus_rate_heldout_delta_ppm": { "$ref": "#/$defs/ppm" },
+        "derive_null_tolerance_ppm": { "$ref": "#/$defs/ppm" },
+        "ready": { "const": true }
+      },
+      "additionalProperties": false
+    },
+    "ballast": {
+      "type": "object",
+      "required": ["ungated_fraction_ppm", "floor_ppm"],
+      "properties": {
+        "ungated_fraction_ppm": { "$ref": "#/$defs/ppm" },
+        "floor_ppm": { "$ref": "#/$defs/ppm" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "ppm": { "type": "integer", "minimum": 0, "maximum": 1000000 },
+    "ppmSamples": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ppm" } },
+    "moment": {
+      "type": "object",
+      "required": ["mean_ppm", "sd_ppm", "n"],
+      "properties": {
+        "mean_ppm": { "$ref": "#/$defs/ppm" },
+        "sd_ppm": { "$ref": "#/$defs/ppm" },
+        "n": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "expectation": {
+      "type": "object",
+      "required": ["exemplar_id", "attributive_share", "coupling_dispersion", "relative_mass", "apparatus_rate_ppm"],
+      "properties": {
+        "exemplar_id": { "type": "string", "pattern": "^ex:[0-9]{3}$" },
+        "attributive_share": { "$ref": "#/$defs/moment" },
+        "coupling_dispersion": { "$ref": "#/$defs/moment" },
+        "relative_mass": { "$ref": "#/$defs/moment" },
+        "apparatus_rate_ppm": { "$ref": "#/$defs/ppm" }
+      },
+      "additionalProperties": false
+    }
+  }
+}
