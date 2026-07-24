@@ -8,6 +8,19 @@ schema-validated endpoint and cannot write anything else.
 **Read [`SPEC.md`](SPEC.md) first.** It is the full design and is
 authoritative; this file is only a map and a quick start.
 
+
+## Priors component boundary
+
+The priors layer is everything the system knows that did **not** come from the document currently being read. It ships data, not runtime behavior: versioned, hashed, distribution-only `Pocket` artifacts that are loaded by the engine and otherwise stay firewalled.
+
+A pocket can affect **what is surprising**; it can never be quoted, cited, or surfaced as content. In this repo that means pockets declare `role: 'corpus'`, validate through `src/pocket.js`, and fail if their distribution payload includes renderable source-text fields.
+
+The prior is not an embedding index. The system already produces meaning structure by reading, so a prior is a distribution over **folds** — typed operators, terrains, stances, bonds, and propositions — not over words or vectors. It seeds all three Ground channels: `priorMass` → Void, `priorBond` → Field, and `priorProp` → Atmosphere.
+
+Pockets are reader- and basis-coupled. A pocket declares `reader_version` and `basis_id`; the engine-facing validator refuses major reader-version mismatches and refuses silent mixing of pockets built on different bases.
+
+See [`docs/priors-component-spec.md`](docs/priors-component-spec.md) for the allocation proposal and invariants.
+
 ## Layout
 
 - `index.html` — the static reader/ingest surface and basis inspector (§9). No build step.
