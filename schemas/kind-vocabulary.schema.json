@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "kind-vocabulary.schema.json",
+  "title": "KindVocabulary@1",
+  "description": "Corpus-scale entity-kind channel payload. Kinds are induced offline over a pocket's folded entity histories and shipped as a pinned vocabulary + evidence, never a member roster. See docs/03-prior-spec-kind-vocabulary.md.",
+  "type": "object",
+  "required": ["schema", "basis_id", "operator_epoch", "reader_version", "content_hash", "pocket", "kinds"],
+  "properties": {
+    "schema": { "const": "KindVocabulary@1" },
+    "basis_id": { "$ref": "pack-common.schema.json#/$defs/basisId" },
+    "operator_epoch": { "type": "string", "pattern": "^eo-\\d{4}-\\d{2}$" },
+    "reader_version": { "type": "string", "pattern": "^[a-z0-9.-]+@\\d+\\.\\d+\\.\\d+$", "not": { "pattern": "latest" } },
+    "content_hash": { "$ref": "pack-common.schema.json#/$defs/sha256" },
+    "pocket": {
+      "type": "object",
+      "required": ["id", "label", "n_sources", "n_entities", "date_range"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^pocket:[a-z0-9][a-z0-9._:-]*$" },
+        "label": { "type": "string", "minLength": 1 },
+        "n_sources": { "type": "integer", "minimum": 1 },
+        "n_entities": { "type": "integer", "minimum": 1 },
+        "date_range": { "type": "array", "prefixItems": [{ "type": "string", "format": "date" }, { "type": "string", "format": "date" }], "items": false, "minItems": 2, "maxItems": 2 }
+      },
+      "additionalProperties": false
+    },
+    "kinds": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/kind" } }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "kind": {
+      "type": "object",
+      "required": [
+        "id", "vocabulary", "parameters", "support_fraction", "transfer_gain",
+        "membership_null", "relative_effect", "n_propose", "n_holdout"
+      ],
+      "properties": {
+        "id": { "type": "string", "pattern": "^entity-kind:sha256:[0-9a-f]{64}$" },
+        "vocabulary": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^parameter:\\S+$" } },
+        "parameters": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/parameterHypothesis" } },
+        "support_fraction": { "type": "number", "minimum": 0, "maximum": 1 },
+        "transfer_gain": { "type": "number" },
+        "membership_null": { "$ref": "#/$defs/nullProtocol" },
+        "relative_effect": { "type": "number" },
+        "n_propose": { "type": "integer", "minimum": 1 },
+        "n_holdout": { "type": "integer", "minimum": 1 },
+        "external_name": { "type": "string", "minLength": 1 },
+        "external_name_provenance": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false,
+      "not": {
+        "anyOf": [
+          { "required": ["propose_members"] },
+          { "required": ["holdout_members"] },
+          { "required": ["members"] }
+        ]
+      },
+      "dependentRequired": {
+        "external_name": ["external_name_provenance"],
+        "external_name_provenance": ["external_name"]
+      }
+    },
+    "parameterHypothesis": {
+      "description": "ParameterHypothesis@1 record from eoreader5's induceEntityKind, treated as an opaque pass-through here — eoPriors does not interpret its internals, only validates the firewall on provenance_expression (see src/kind-vocabulary/firewall.js).",
+      "type": "object",
+      "required": ["id", "provenance_expression"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^parameter:\\S+$" },
+        "provenance_expression": { "$ref": "#/$defs/expressionNode" }
+      },
+      "additionalProperties": true
+    },
+    "nullProtocol": {
+      "type": "object",
+      "required": ["schema"],
+      "properties": { "schema": { "const": "NullProtocol@1" } },
+      "additionalProperties": true
+    },
+    "expressionNode": {
+      "description": "A node in the provenance_expression AST: an expression-language program over channel indices only. No node may carry a free string literal (a quotation, proper noun, or other claim) — see src/kind-vocabulary/firewall.js#assertNoFreeStringLiteral.",
+      "type": "object",
+      "required": ["op"],
+      "properties": {
+        "op": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "args": { "type": "array", "items": { "$ref": "#/$defs/expressionArg" } },
+        "channel_index": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "expressionArg": {
+      "anyOf": [
+        { "$ref": "#/$defs/expressionNode" },
+        { "type": "number" },
+        { "type": "integer" },
+        { "type": "boolean" }
+      ]
+    }
+  }
+}
